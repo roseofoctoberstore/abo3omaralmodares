@@ -1160,6 +1160,68 @@
   /* ---------- Model form ---------- */
   function buildModelForm(unit, existing){
     const wrap = el("div");
+    let parsedQuestions = null; // filled by JSON import, consumed on save
+
+    if(!existing){
+      const aiBox = el("div","admin-section");
+      aiBox.style.background = "#F0FBF6";
+      aiBox.style.border = "2px dashed " + "#2FBE6C";
+      aiBox.appendChild(el("h3", null, "📥 استيراد نموذج جاهز (من Claude)"));
+      aiBox.appendChild(el("p","hint","ابعت أي امتحان (صورة أو PDF أو نص) لـ Claude في الشات، وهو هيرد عليك بكود JSON جاهز. الصقه هنا واضغط استيراد، وهيتعبّى كل شيء تلقائيًا وتقدر تراجعه قبل الحفظ."));
+
+      const jsonField = el("div","field");
+      jsonField.appendChild(el("label", null, "🧩 الصق كود JSON هنا"));
+      const jsonArea = document.createElement("textarea");
+      jsonArea.style.minHeight = "110px"; jsonArea.style.direction = "ltr"; jsonArea.style.textAlign = "left"; jsonArea.style.fontFamily = "monospace"; jsonArea.style.fontSize="12.5px";
+      jsonArea.placeholder = '{"label":"النموذج A","emoji":"📝","story_title":"...","story":"...","word_bank":[...],"questions":[...]}';
+      jsonField.appendChild(jsonArea);
+      aiBox.appendChild(jsonField);
+
+      const genActions = el("div","form-actions");
+      const genBtn = el("button","btn btn-primary btn-sm","📥 استورد البيانات");
+      const genStatus = el("span","hint","");
+      genActions.appendChild(genBtn); genActions.appendChild(genStatus);
+      aiBox.appendChild(genActions);
+
+      const previewWrap = el("div");
+      aiBox.appendChild(previewWrap);
+
+      genBtn.addEventListener("click", ()=>{
+        const raw = jsonArea.value.trim();
+        if(!raw){ alert("الصق كود JSON أولاً"); return; }
+        previewWrap.innerHTML = ""; genStatus.textContent = "";
+        try{
+          const clean = raw.replace(/```json|```/g, "").trim();
+          const result = JSON.parse(clean);
+          labelInput.value = result.label || labelInput.value;
+          if(result.emoji) emojiInput.value = result.emoji;
+          storyTitleInput.value = result.story_title || "";
+          storyTextarea.value = result.story || "";
+          bankInput.value = (result.word_bank || []).join(", ");
+          parsedQuestions = Array.isArray(result.questions) ? result.questions : [];
+
+          genStatus.textContent = "✅ اتعبّى " + parsedQuestions.length + " سؤال - راجعهم تحت وادوس إنشاء النموذج";
+          const list = document.createElement("ol");
+          list.style.fontSize = "13px"; list.style.direction = "ltr"; list.style.textAlign="left";
+          parsedQuestions.forEach(q=>{
+            const li = document.createElement("li");
+            let correctTxt = "";
+            if(q.type === "fill") correctTxt = (result.word_bank||[])[q.correct_index] || "?";
+            else correctTxt = (q.options||[])[q.correct_index] || "?";
+            li.textContent = q.prompt + "  →  " + correctTxt;
+            list.appendChild(li);
+          });
+          previewWrap.appendChild(list);
+          previewWrap.appendChild(el("div","hint","⚠️ لو هتعدّل بنك الكلمات فوق، لا تحذف أو تعيد ترتيب الكلمات الموجودة عشان أسئلة الإكمال متتربطش غلط - تقدر تضيف كلمات جديدة في الآخر بس."));
+        }catch(e){
+          alert("كود JSON مش صحيح: " + (e.message||e) + "\nتأكد إنك نسخته كامل من غير نقص.");
+        }
+      });
+
+      wrap.appendChild(aiBox);
+      wrap.appendChild(el("p","hint","— أو عبّي البيانات يدويًا تحت 👇 —"));
+    }
+
     const row1 = el("div","field-row");
     const labelField = el("div","field"); labelField.appendChild(el("label",null,"اسم النموذج"));
     const labelInput = document.createElement("input"); labelInput.type="text"; labelInput.value = existing?existing.label:"";
@@ -1205,6 +1267,18 @@
           payload.unit_id = unit.id; payload.key = genKey(); payload.sort_order = unit.models.length+1;
           const {data,error} = await supabase.from("models").insert(payload).select().single();
           if(error) throw error;
+          if(parsedQuestions && parsedQuestions.length){
+            const rows = parsedQuestions.map((q, idx)=>({
+              model_id: data.id,
+              q_type: q.type,
+              prompt: q.prompt,
+              options: q.type === "fill" ? null : (q.options || null),
+              correct_index: typeof q.correct_index === "number" ? q.correct_index : 0,
+              sort_order: idx+1
+            }));
+            const { error: qErr } = await supabase.from("questions").insert(rows);
+            if(qErr) alert("اتحفظ النموذج بس حصل خطأ في حفظ بعض الأسئلة: " + qErr.message);
+          }
           await reloadTree(); adminSel.modelId = data.id;
           renderAdminContent(); buildHome(); return;
         }
