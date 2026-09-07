@@ -311,6 +311,7 @@
       <div class="score-big" id="scoreBig">0 <span>/ 0</span></div>
       <div class="badge" id="badgeText"></div>
       <div class="encourage" id="encourageText"></div>
+      <div class="name-warn" id="saveStatusWarn" style="display:none;text-align:center;margin-bottom:12px;"></div>
       <div class="result-actions">
         <button class="btn btn-primary" id="btnRetry">🔁 حاول مرة أخرى</button>
         <button class="btn btn-coral" id="btnAnotherUnit">📘 وحدة أخرى</button>
@@ -818,8 +819,10 @@
     if(stars>=2){ setTimeout(()=>{ playFanfare(); burstConfetti(); }, 300+stars*260); }
     else if(stars===0 && pct<50){ setTimeout(()=>{ playWrong(); }, 300); }
 
+    const saveStatusWarn = document.getElementById("saveStatusWarn");
+    saveStatusWarn.style.display = "none";
     try{
-      await supabase.from("attempts").insert({
+      const { error: attemptErr } = await supabase.from("attempts").insert({
         student_name: studentName,
         subject_key: subj.key, subject_name: subj.name,
         grade_key: grade.key, grade_name: grade.name,
@@ -828,7 +831,16 @@
         model_label: modelLabel,
         score: quizState.score, total: total, percentage: pct
       });
-    }catch(e){ console.warn("تعذر حفظ النتيجة:", e); }
+      if(attemptErr){
+        console.error("تعذر حفظ النتيجة في Supabase:", attemptErr);
+        saveStatusWarn.style.display = "block";
+        saveStatusWarn.textContent = "⚠️ اتلعبت النتيجة بس ما اتحفظتش في السجل (" + attemptErr.message + "). كلم المعلم يتأكد من إعدادات القاعدة.";
+      }
+    }catch(e){
+      console.error("تعذر حفظ النتيجة:", e);
+      saveStatusWarn.style.display = "block";
+      saveStatusWarn.textContent = "⚠️ اتلعبت النتيجة بس ما اتحفظتش في السجل (مشكلة اتصال). تأكد إن الإنترنت شغال.";
+    }
   }
 
   function burstConfetti(){
@@ -890,6 +902,23 @@
     if(html !== undefined) e.innerHTML = html;
     return e;
   }
+
+  const EMOJI_PRESETS = ["📘","🇬🇧","🔢","📗","🔬","🎨","🎵","🏃","🌍","🕌","💻","🧪","📖","🍎","⚽","🥗","🍞","🧩","⭐","🏆"];
+  function attachEmojiPicker(inputEl, container){
+    const row = el("div","chips-pick");
+    row.style.marginTop = "6px";
+    row.style.maxWidth = "420px";
+    EMOJI_PRESETS.forEach(em=>{
+      const chip = el("button","chip-pick", em);
+      chip.type = "button";
+      chip.style.fontSize = "16px";
+      chip.style.padding = "6px 10px";
+      chip.addEventListener("click", ()=>{ inputEl.value = em; });
+      row.appendChild(chip);
+    });
+    container.appendChild(row);
+  }
+
 
   function renderAdminContent(){
     adminContentPane.innerHTML = "";
@@ -1001,11 +1030,13 @@
     nameInput.placeholder = "مثال: الرياضيات";
     nameField.appendChild(nameInput); row1.appendChild(nameField);
 
-    const iconField = el("div","field"); iconField.style.maxWidth="90px";
+    const iconField = el("div","field"); iconField.style.maxWidth="140px";
     iconField.appendChild(el("label",null,"إيموجي"));
     const iconInput = document.createElement("input"); iconInput.type="text"; iconInput.value = existing ? (existing.icon||"📘") : "📘";
-    iconField.appendChild(iconInput); row1.appendChild(iconField);
+    iconField.appendChild(iconInput);
+    row1.appendChild(iconField);
     wrap.appendChild(row1);
+    attachEmojiPicker(iconInput, wrap);
 
     const row2 = el("div","field-row");
     const colors = [
@@ -1115,11 +1146,13 @@
     const nameInput = document.createElement("input"); nameInput.type="text"; nameInput.value = existing ? existing.name : "";
     nameInput.placeholder = "مثال: الوحدة الثانية"; nameField.appendChild(nameInput); row.appendChild(nameField);
 
-    const iconField = el("div","field"); iconField.style.maxWidth="90px";
+    const iconField = el("div","field"); iconField.style.maxWidth="140px";
     iconField.appendChild(el("label",null,"إيموجي"));
     const iconInput = document.createElement("input"); iconInput.type="text"; iconInput.value = existing ? (existing.icon||"📘") : "📘";
-    iconField.appendChild(iconInput); row.appendChild(iconField);
+    iconField.appendChild(iconInput);
+    row.appendChild(iconField);
     wrap.appendChild(row);
+    attachEmojiPicker(iconInput, wrap);
 
     const actions = el("div","form-actions");
     const saveBtn = el("button","btn btn-primary btn-sm", existing ? "💾 حفظ التعديلات" : "✅ إنشاء الوحدة");
@@ -1227,10 +1260,12 @@
     const labelInput = document.createElement("input"); labelInput.type="text"; labelInput.value = existing?existing.label:"";
     labelInput.placeholder = "مثال: النموذج A"; labelField.appendChild(labelInput); row1.appendChild(labelField);
 
-    const emojiField = el("div","field"); emojiField.style.maxWidth="90px"; emojiField.appendChild(el("label",null,"إيموجي"));
+    const emojiField = el("div","field"); emojiField.style.maxWidth="140px"; emojiField.appendChild(el("label",null,"إيموجي"));
     const emojiInput = document.createElement("input"); emojiInput.type="text"; emojiInput.value = existing?(existing.emoji||"📝"):"📝";
-    emojiField.appendChild(emojiInput); row1.appendChild(emojiField);
+    emojiField.appendChild(emojiInput);
+    row1.appendChild(emojiField);
     wrap.appendChild(row1);
+    attachEmojiPicker(emojiInput, wrap);
 
     const row2 = el("div","field-row");
     const storyTitleField = el("div","field"); storyTitleField.appendChild(el("label",null,"عنوان القصة (اختياري)"));
