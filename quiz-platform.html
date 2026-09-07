@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🌟 منصة الاختبارات التفاعلية - المدرسة الابتدائية</title>
+<style>
+  :root{
+    --bg1:#EAF6FF;
+    --bg2:#FFF6E1;
+    --ink:#1B3A4B;
+    --ink-soft:#4A6B7A;
+    --teal:#06B6A4;
+    --teal-dark:#048C7F;
+    --coral:#FF8A5B;
+    --coral-dark:#E96A3A;
+    --pink:#FF5D8F;
+    --purple:#8B6FE0;
+    --yellow:#FFC94D;
+    --green:#2FBE6C;
+    --green-dark:#1F9C57;
+    --red:#FF5C5C;
+    --red-dark:#E23E4E;
+    --card-bg:#FFFFFF;
+    --radius-lg:28px;
+    --radius-md:18px;
+    --radius-sm:12px;
+    --shadow: 0 14px 34px rgba(27,58,75,0.14);
+    --shadow-sm: 0 6px 16px rgba(27,58,75,0.10);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;min-height:100vh;
+    font-family:'Trebuchet MS','Segoe UI','Tahoma',sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,var(--bg1) 0%, var(--bg2) 100%);
+    overflow-x:hidden;
+    transition:background .5s ease;
+  }
+
+  /* ---------- background decor ---------- */
+  .bg-decor{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+  .blob{position:absolute;border-radius:50%;opacity:.55;filter:blur(1px);}
+  .blob.sun{width:150px;height:150px;background:radial-gradient(circle at 35% 35%,#FFE29A,var(--yellow));top:-40px;right:-30px;animation:float 7s ease-in-out infinite;}
+  .blob.cloud{background:#fff;opacity:.8;border-radius:50px;}
+  .cloud1{width:110px;height:44px;top:10%;left:6%;animation:drift 18s linear infinite;}
+  .cloud2{width:80px;height:34px;top:70%;left:80%;animation:drift 22s linear infinite reverse;}
+  .cloud3{width:60px;height:26px;top:40%;left:88%;animation:drift 15s linear infinite;}
+  .star-deco{position:absolute;color:var(--pink);opacity:.5;font-size:22px;animation:float 5s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
+  @keyframes drift{0%{transform:translateX(0);}100%{transform:translateX(40px);}}
+
+  .app-shell{
+    position:relative;z-index:1;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px 14px;
+  }
+
+  .card{
+    width:100%;max-width:680px;
+    background:var(--card-bg);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:28px 26px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:10px;
+    background:linear-gradient(90deg,#06B6A4,#FF8A5B,#FF5D8F,#8B6FE0,#FFC94D);
+  }
+
+  .screen{display:none;}
+  .screen.active{display:block;animation:fadeSlideIn .45s ease;}
+  @keyframes fadeSlideIn{
+    from{opacity:0;transform:translateY(14px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  h1.title{font-size:25px;margin:6px 0 4px;text-align:center;color:var(--ink);}
+  p.subtitle{text-align:center;color:var(--ink-soft);margin:0 0 18px;font-size:14.5px;}
+
+  /* ---------- breadcrumb ---------- */
+  .crumb-bar{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:2px;margin-bottom:18px;font-size:13px;
+  }
+  .crumb{
+    background:none;border:none;cursor:pointer;color:var(--teal-dark);
+    font-family:inherit;font-weight:700;font-size:13px;padding:4px 4px;border-radius:8px;
+  }
+  .crumb:hover{background:#EAF6FF;text-decoration:underline;}
+  .crumb-current{color:var(--ink-soft);font-weight:700;padding:4px;}
+  .crumb-sep{color:#B9CBD2;}
+
+  /* ---------- mascot ---------- */
+  .mascot-wrap{display:flex;justify-content:center;margin-bottom:10px;}
+  .mascot{
+    width:80px;height:80px;border-radius:50%;position:relative;
+    background:radial-gradient(circle at 35% 30%,#FFE29A,var(--yellow));
+    box-shadow:var(--shadow-sm);
+    transition:transform .25s ease;
+  }
+  .mascot .eye{position:absolute;width:10px;height:10px;background:var(--ink);border-radius:50%;top:30px;animation:blink 4s infinite;}
+  .mascot .eye.left{left:21px;}
+  .mascot .eye.right{right:21px;}
+  .mascot .mouth{
+    position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+    width:26px;height:13px;border:3px solid var(--ink);border-top:none;
+    border-bottom-left-radius:13px;border-bottom-right-radius:13px;
+  }
+  .mascot.sad .mouth{
+    border:3px solid var(--ink);border-bottom:none;border-top-left-radius:13px;border-top-right-radius:13px;
+    bottom:15px;
+  }
+  .mascot.bounce{animation:bounce .55s ease;}
+  .mascot.shake{animation:shake .5s ease;}
+  @keyframes bounce{0%{transform:scale(1);}30%{transform:scale(1.18) translateY(-10px);}60%{transform:scale(.95) translateY(2px);}100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px) rotate(-4deg);}40%{transform:translateX(8px) rotate(4deg);}60%{transform:translateX(-6px) rotate(-3deg);}80%{transform:translateX(6px) rotate(3deg);}}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1);}96%{transform:scaleY(.1);}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    border:none;cursor:pointer;font-family:inherit;font-weight:700;
+    border-radius:var(--radius-md);padding:14px 18px;font-size:16px;
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    box-shadow:var(--shadow-sm);
+  }
+  .btn:active{transform:scale(.96);}
+  .btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;}
+  .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px);}
+  .btn-coral{background:linear-gradient(135deg,var(--coral),var(--coral-dark));color:#fff;}
+  .btn-coral:hover{filter:brightness(1.06);transform:translateY(-2px);}
+  .btn-ghost{background:#F2F7F8;color:var(--ink);}
+  .btn-ghost:hover{background:#E7F0F1;}
+  .btn-block{width:100%;display:block;}
+
+  /* ---------- choice cards (subjects/grades/units/models) ---------- */
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+  .choice-card{
+    background:#F7FBFC;border:2px solid #E4EEF0;border-radius:var(--radius-md);
+    padding:16px 10px;text-align:center;cursor:pointer;transition:.18s ease;position:relative;
+  }
+  .choice-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:var(--shadow-sm);}
+  .choice-card .emoji{font-size:30px;display:block;margin-bottom:6px;}
+  .choice-card .name{font-weight:700;font-size:15px;}
+  .choice-card .count{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .choice-card.wide{grid-column:1/-1;}
+  .choice-card.featured{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;}
+  .choice-card.featured .count{color:rgba(255,255,255,.85);}
+  .choice-card.disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
+  .soon-badge{
+    position:absolute;top:8px;left:8px;background:#FFEFC7;color:#8A6A1E;
+    font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:10px;
+  }
+
+  /* ---------- story screen ---------- */
+  .story-box{
+    background:#FBF7EC;border:2px dashed var(--yellow);border-radius:var(--radius-md);
+    padding:18px;margin:14px 0 20px;direction:ltr;text-align:left;
+    font-size:16.5px;line-height:1.65;color:#5C4A1E;
+  }
+  .story-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
+
+  /* ---------- quiz screen ---------- */
+  .quiz-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .progress-track{flex:1;height:14px;background:#EAF1F2;border-radius:20px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--teal),var(--coral));width:0%;transition:width .4s ease;}
+  .score-chip{background:var(--yellow);color:#5C4A1E;font-weight:800;font-size:13px;padding:6px 12px;border-radius:20px;white-space:nowrap;}
+  .q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;color:var(--ink-soft);}
+  .type-chip{display:inline-block;padding:4px 12px;border-radius:14px;font-size:12.5px;font-weight:700;background:#EAF6FF;color:var(--teal-dark);}
+  .streak-chip{color:var(--coral-dark);font-weight:800;font-size:13px;}
+
+  .question-box{direction:ltr;text-align:left;font-size:19px;font-weight:700;line-height:1.5;margin:8px 0 18px;color:var(--ink);}
+  .question-box .blank{display:inline-block;min-width:56px;border-bottom:3px solid var(--coral);color:var(--coral-dark);text-align:center;}
+
+  .options-grid{display:grid;gap:12px;}
+  .options-grid.grid-2{grid-template-columns:1fr 1fr;}
+  .options-grid.grid-2x2{grid-template-columns:1fr 1fr;}
+  .options-grid.chips{grid-template-columns:repeat(auto-fit,minmax(100px,1fr));}
+
+  .opt-btn{
+    direction:ltr;text-align:left;
+    background:#F7FBFC;border:2px solid #E4EEF0;border-radius:var(--radius-md);
+    padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;color:var(--ink);
+    transition:.15s ease; position:relative;
+  }
+  .opt-btn .letter{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;background:var(--teal);color:#fff;border-radius:50%;font-size:12px;margin-right:8px;}
+  .opt-btn:hover:not(.locked){border-color:var(--teal);transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .opt-btn.chip{text-align:center;border-radius:24px;padding:12px 14px;}
+  .opt-btn.correct{background:#E7FBEF;border-color:var(--green);color:var(--green-dark);animation:pop .35s ease;}
+  .opt-btn.wrong{background:#FFEDED;border-color:var(--red);color:var(--red-dark);animation:shake .45s ease;}
+  .opt-btn.dim{opacity:.5;}
+  .opt-btn.locked{cursor:default;}
+  @keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+
+  .feedback-box{margin-top:16px;padding:14px 16px;border-radius:var(--radius-md);font-weight:700;font-size:15px;display:none;align-items:center;gap:8px;}
+  .feedback-box.show{display:flex;animation:fadeSlideIn .3s ease;}
+  .feedback-box.ok{background:#E7FBEF;color:var(--green-dark);}
+  .feedback-box.no{background:#FFEDED;color:var(--red-dark);}
+
+  .next-wrap{margin-top:16px;text-align:center;}
+  .quiz-footer-nav{margin-top:14px;text-align:center;}
+  .quiz-footer-nav button{background:none;border:none;color:var(--ink-soft);font-size:12.5px;cursor:pointer;text-decoration:underline;font-family:inherit;}
+
+  /* ---------- result screen ---------- */
+  .result-title{text-align:center;font-size:24px;margin-bottom:4px;}
+  .result-sub{text-align:center;color:var(--ink-soft);margin-bottom:18px;}
+  .stars-row{display:flex;justify-content:center;gap:14px;margin:18px 0;}
+  .stars-row .star{font-size:52px;opacity:.25;transform:scale(.6);transition:.4s ease;}
+  .stars-row .star.on{opacity:1;transform:scale(1);}
+  .score-big{text-align:center;font-size:40px;font-weight:800;color:var(--teal-dark);margin:6px 0;}
+  .score-big span{font-size:20px;color:var(--ink-soft);font-weight:600;}
+  .badge{text-align:center;font-weight:800;font-size:17px;margin:10px 0 6px;color:var(--coral-dark);}
+  .encourage{text-align:center;color:var(--ink-soft);margin-bottom:20px;font-size:14.5px;}
+  .result-actions{display:flex;gap:12px;flex-wrap:wrap;}
+  .result-actions .btn{flex:1;min-width:140px;}
+
+  .confetti-piece{position:fixed;top:-20px;width:10px;height:14px;z-index:50;border-radius:2px;pointer-events:none;}
+  @keyframes confettiFall{to{transform:translateY(110vh) rotate(540deg);opacity:.9;}}
+
+  footer.made{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:16px;opacity:.7;}
+
+  @media (max-width:420px){
+    .card{padding:22px 16px 18px;}
+    h1.title{font-size:21px;}
+    .options-grid.grid-2x2{grid-template-columns:1fr;}
+    .question-box{font-size:17px;}
+    .choice-grid{grid-template-columns:1fr;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-decor">
+  <div class="blob sun"></div>
+  <div class="blob cloud cloud1"></div>
+  <div class="blob cloud cloud2"></div>
+  <div class="blob cloud cloud3"></div>
+  <div class="star-deco" style="top:20%;left:14%;">✦</div>
+  <div class="star-deco" style="top:60%;left:4%;animation-delay:1s;">✧</div>
+  <div class="star-deco" style="top:78%;left:70%;animation-delay:2s;">✦</div>
+  <div class="star-deco" style="top:30%;left:78%;animation-delay:.5s;">✧</div>
+</div>
+
+<div class="app-shell">
+  <div class="card" id="card">
+
+    <!-- HOME: choose subject -->
+    <section class="screen active" id="screen-home">
+      <div class="mascot-wrap"><div class="mascot" id="mascotHome"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title">🌟 منصة الاختبارات التفاعلية</h1>
+      <p class="subtitle">اختر المادة عشان نبدأ رحلة التعلم! 🚀</p>
+      <div class="choice-grid" id="subjectGrid"></div>
+      <footer class="made">تطبيق تفاعلي يعمل بالكامل داخل المتصفح - بدون إنترنت 💙</footer>
+    </section>
+
+    <!-- GRADES: choose grade within subject -->
+    <section class="screen" id="screen-grades">
+      <div class="crumb-bar" id="crumbGrades"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotGrades"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="gradesTitle">اختر الصف الدراسي</h1>
+      <p class="subtitle">📚 حدد صفك عشان نجيبلك الاختبارات المناسبة</p>
+      <div class="choice-grid" id="gradeGrid"></div>
+    </section>
+
+    <!-- UNITS: choose unit within grade -->
+    <section class="screen" id="screen-units">
+      <div class="crumb-bar" id="crumbUnits"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotUnits"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="unitsTitle">اختر الوحدة</h1>
+      <p class="subtitle">📘 كل وحدة فيها اختبارات ونماذج جاهزة</p>
+      <div class="choice-grid" id="unitGrid"></div>
+    </section>
+
+    <!-- MODELS: choose test model (A/B/C/Mix) within unit -->
+    <section class="screen" id="screen-models">
+      <div class="crumb-bar" id="crumbModels"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotModels"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="modelsTitle">اختر النموذج</h1>
+      <p class="subtitle">اختر النموذج الذي تريد تجربته وابدأ المغامرة! 🚀</p>
+      <div class="choice-grid" id="modelGrid"></div>
+    </section>
+
+    <!-- STORY -->
+    <section class="screen" id="screen-story">
+      <div class="crumb-bar" id="crumbStory"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotStory"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="storyTitle">📖 اقرأ القصة أولاً</h1>
+      <p class="subtitle">اقرأ بعناية، ستحتاجها في الإجابة عن بعض الأسئلة</p>
+      <div class="story-box" id="storyText"></div>
+      <div class="story-actions">
+        <button class="btn btn-ghost" id="btnListen">🔊 استمع للقصة</button>
+        <button class="btn btn-ghost" id="btnBackModels">↩ رجوع للنماذج</button>
+      </div>
+      <button class="btn btn-primary btn-block" id="btnStartQuiz" style="margin-top:8px;">🚀 ابدأ الأسئلة!</button>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="screen" id="screen-quiz">
+      <div class="quiz-top">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="score-chip" id="scoreChip">⭐ 0</div>
+      </div>
+      <div class="q-meta">
+        <span class="type-chip" id="typeChip">📝 سؤال</span>
+        <span id="qCounter">سؤال 1 من 17</span>
+        <span class="streak-chip" id="streakChip" style="display:none;">🔥</span>
+      </div>
+
+      <div class="mascot-wrap"><div class="mascot" id="mascotQuiz"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+
+      <div class="question-box" id="questionBox"></div>
+      <div class="options-grid" id="optionsGrid"></div>
+
+      <div class="feedback-box" id="feedbackBox"></div>
+      <div class="next-wrap" id="nextWrap" style="display:none;">
+        <button class="btn btn-coral" id="btnNext">التالي ⏭</button>
+      </div>
+      <div class="quiz-footer-nav"><button id="btnQuitQuiz">إنهاء والرجوع للنماذج</button></div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="screen-result">
+      <h1 class="result-title">🏆 النتيجة النهائية</h1>
+      <p class="result-sub" id="resultModelLabel"></p>
+
+      <div class="mascot-wrap"><div class="mascot" id="mascotResult" style="width:100px;height:100px;"><div class="eye left" style="top:38px;"></div><div class="eye right" style="top:38px;"></div><div class="mouth"></div></div></div>
+
+      <div class="stars-row" id="starsRow">
+        <span class="star" id="star1">⭐</span>
+        <span class="star" id="star2">⭐</span>
+        <span class="star" id="star3">⭐</span>
+      </div>
+
+      <div class="score-big" id="scoreBig">0 <span>/ 0</span></div>
+      <div class="badge" id="badgeText"></div>
+      <div class="encourage" id="encourageText"></div>
+
+      <div class="result-actions">
+        <button class="btn btn-primary" id="btnRetry">🔁 حاول مرة أخرى</button>
+        <button class="btn btn-coral" id="btnAnotherUnit">📘 وحدة أخرى</button>
+        <button class="btn btn-ghost" id="btnHome">🏠 الرئيسية</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     1) CONTENT REGISTRY
+     Structure: SUBJECTS -> grades -> units -> models (A/B/C ...)
+     To add new content later: just add a new subject / grade / unit
+     object below following the same shape. Nothing else needs to change.
+     ========================================================= */
+
+  const ENGLISH_UNIT1 = {
+    name: "الوحدة الأولى",
+    icon: "🍎",
+    models: {
+      A: {
+        label: "النموذج A",
+        emoji: "🍞",
+        storyTitle: "قصة ناديا",
+        story: "My name is Nadia. Every morning I eat breakfast with my family. I drink milk and eat bread with cheese. Then I go to school by bus. I like my school because I play with my friends. I always do my homework at night. Healthy habits help me stay strong.",
+        bank: ["soup","restaurant","coins","smell","laughed"],
+        questions: [
+          {type:"tf",  prompt:"Nadia goes to school by car.", options:["✅ True","❌ False"], correct:1},
+          {type:"tf",  prompt:"She drinks milk and eats bread with cheese for breakfast.", options:["✅ True","❌ False"], correct:0},
+          {type:"tf",  prompt:"She doesn't like her school.", options:["✅ True","❌ False"], correct:1},
+          {type:"tf",  prompt:"She does her homework at night.", options:["✅ True","❌ False"], correct:0},
+          {type:"mcq", prompt:"I can ___ flowers with my nose.", options:["hear","smell","see","taste"], correct:1},
+          {type:"mcq", prompt:"He can ___ music with his ears.", options:["smell","touch","hear","taste"], correct:2},
+          {type:"mcq", prompt:"We ___ our teeth before bed.", options:["brush","brushes","brushing","brushed"], correct:0},
+          {type:"mcq", prompt:"She ___ her room every Friday.", options:["clean","cleans","cleaning","cleaned"], correct:1},
+          {type:"mcq", prompt:"We ___ with our ears.", options:["see","smell","taste","hear"], correct:3},
+          {type:"mcq", prompt:"He ___ breakfast every morning.", options:["have","has","having","haves"], correct:1},
+          {type:"fill", prompt:"Omar stood near a ___.", correct:1},
+          {type:"fill", prompt:"He could ___ the soup inside.", correct:3},
+          {type:"fill", prompt:"\"You enjoy the ___, so you must pay!\"", correct:0},
+          {type:"fill", prompt:"Omar shook his ___.", correct:2},
+          {type:"fill", prompt:"The owner ___.", correct:4},
+          {type:"mcq", prompt:"Omar paid with the sound of ___.", options:["his voice","coins","laughter","shoes"], correct:1},
+          {type:"mcq", prompt:"The owner told Omar he must ___.", options:["eat","leave","work","pay"], correct:3}
+        ]
+      },
+      B: {
+        label: "النموذج B",
+        emoji: "🥗",
+        storyTitle: "روتين المساء",
+        story: "At night, first I take a shower. Then I have dinner with my family. Next, I brush my teeth and read a book. Finally, I go to bed at nine o'clock because sleeping early keeps me healthy.",
+        bank: ["healthy","vegetables","water","sweets","strong"],
+        questions: [
+          {type:"tf",  prompt:"He takes a shower in the morning.", options:["✅ True","❌ False"], correct:1},
+          {type:"tf",  prompt:"He has dinner with his family.", options:["✅ True","❌ False"], correct:0},
+          {type:"tf",  prompt:"He doesn't do his homework.", options:["✅ True","❌ False"], correct:1},
+          {type:"tf",  prompt:"He goes to bed at nine o'clock.", options:["✅ True","❌ False"], correct:0},
+          {type:"mcq", prompt:"We use our ___ to read books.", options:["eyes","ears","nose","hands"], correct:0},
+          {type:"mcq", prompt:"We ___ food with our tongue.", options:["hear","taste","smell","touch"], correct:1},
+          {type:"mcq", prompt:"If we don't sleep, we feel ___.", options:["fast","clean","tired","excited"], correct:2},
+          {type:"mcq", prompt:"I ___ a shower in the evening.", options:["do","take","eat","walk"], correct:1},
+          {type:"mcq", prompt:"I ___ my teeth before bed.", options:["brush","brushes","brushing","brushed"], correct:0},
+          {type:"mcq", prompt:"Hana ___ to school every day.", options:["walk","walking","walks","walked"], correct:2},
+          {type:"fill", prompt:"A ___ lunch helps children feel happy.", correct:0},
+          {type:"fill", prompt:"A good lunch may have rice, chicken, and ___.", correct:1},
+          {type:"fill", prompt:"Drinking ___ is also important.", correct:2},
+          {type:"fill", prompt:"You shouldn't eat too many ___.", correct:3},
+          {type:"fill", prompt:"If you eat well, you will be ___.", correct:4},
+          {type:"mcq", prompt:"A good lunch may have chicken, vegetables, fruit, and ___.", options:["candy","rice","pizza","water"], correct:1},
+          {type:"mcq", prompt:"A healthy lunch helps children feel ___.", options:["tired","sad","sleepy","strong"], correct:3}
+        ]
+      },
+      C: {
+        label: "النموذج C",
+        emoji: "⚽",
+        storyTitle: "قصة شادي",
+        story: "Shady eats a good breakfast every morning to have energy. At school, he plays with his friends during break time. He sleeps for nine hours every night to keep his mind sharp and his body healthy. Healthy habits make us feel strong.",
+        bank: ["healthy","brush","sleep","vegetables","football"],
+        questions: [
+          {type:"tf",  prompt:"Shady doesn't eat breakfast.", options:["✅ True","❌ False"], correct:1},
+          {type:"tf",  prompt:"He plays with his friends at break time.", options:["✅ True","❌ False"], correct:0},
+          {type:"tf",  prompt:"He sleeps for five hours every night.", options:["✅ True","❌ False"], correct:1},
+          {type:"tf",  prompt:"Healthy habits make us feel strong.", options:["✅ True","❌ False"], correct:0},
+          {type:"mcq", prompt:"I hear with my ___.", options:["eyes","nose","ears","hands"], correct:2},
+          {type:"mcq", prompt:"I ___ with my nose.", options:["hear","smell","taste","touch"], correct:1},
+          {type:"mcq", prompt:"He ___ football with his friends.", options:["play","playing","plays","played"], correct:2},
+          {type:"mcq", prompt:"They ___ vitamins every morning.", options:["takes","taking","took","take"], correct:3},
+          {type:"mcq", prompt:"I can ___ the soup with my tongue.", options:["smell","hear","taste","watch"], correct:2},
+          {type:"mcq", prompt:"She ___ (not) like dirty places.", options:["don't","doesn't","isn't","aren't"], correct:1},
+          {type:"fill", prompt:"I want to keep my body ___.", correct:0},
+          {type:"fill", prompt:"I ___ my teeth twice every day.", correct:1},
+          {type:"fill", prompt:"I ___ early at night and wake up early.", correct:2},
+          {type:"fill", prompt:"I eat ___ and drink milk every day.", correct:3},
+          {type:"fill", prompt:"I also play ___ with my friends.", correct:4},
+          {type:"mcq", prompt:"Salma brushes her teeth ___ every day.", options:["once","twice","never","three times"], correct:1},
+          {type:"mcq", prompt:"Salma plays ___ with her friends at school.", options:["cards","chess","football","phone games"], correct:2}
+        ]
+      }
+    }
+  };
+
+  const SUBJECTS = {
+    english: {
+      name: "اللغة الإنجليزية",
+      icon: "🇬🇧",
+      theme: { primary:"#06B6A4", primaryDark:"#048C7F", accent:"#FF8A5B", accentDark:"#E96A3A" },
+      grades: {
+        g1: { name:"الصف الأول الابتدائي", units:{} },
+        g2: { name:"الصف الثاني الابتدائي", units:{} },
+        g3: { name:"الصف الثالث الابتدائي", units:{} },
+        g4: {
+          name:"الصف الرابع الابتدائي",
+          units: {
+            u1: ENGLISH_UNIT1,
+            u2: { name:"الوحدة الثانية", units:null },
+            u3: { name:"الوحدة الثالثة", units:null }
+          }
+        },
+        g5: { name:"الصف الخامس الابتدائي", units:{} },
+        g6: { name:"الصف السادس الابتدائي", units:{} }
+      }
+    },
+    math: {
+      name: "الرياضيات",
+      icon: "🔢",
+      theme: { primary:"#8B6FE0", primaryDark:"#6B4FC0", accent:"#FF5D8F", accentDark:"#E23E6F" },
+      grades: {}
+    },
+    arabic: {
+      name: "اللغة العربية",
+      icon: "📗",
+      theme: { primary:"#2FBE6C", primaryDark:"#1F9C57", accent:"#FFC94D", accentDark:"#E0A82E" },
+      grades: {}
+    },
+    science: {
+      name: "العلوم",
+      icon: "🔬",
+      theme: { primary:"#3AAED8", primaryDark:"#2B8DB3", accent:"#FF8A5B", accentDark:"#E96A3A" },
+      grades: {}
+    }
+  };
+
+  const TYPE_LABELS = {
+    tf: "📖 اقرأ بعناية",
+    mcq: "📝 اختر الإجابة الصحيحة",
+    fill: "🧩 أكمل الجملة"
+  };
+
+  /* =========================================================
+     2) NAVIGATION STATE
+     ========================================================= */
+  let nav = { subjectKey:null, gradeKey:null, unitKey:null };
+  let quizState = {
+    modelKey: null,
+    questions: [],
+    index: 0,
+    score: 0,
+    streak: 0,
+    answered: false,
+    nextTimer: null
+  };
+
+  function currentSubject(){ return nav.subjectKey ? SUBJECTS[nav.subjectKey] : null; }
+  function currentGrade(){ const s=currentSubject(); return (s && nav.gradeKey) ? s.grades[nav.gradeKey] : null; }
+  function currentUnit(){ const g=currentGrade(); return (g && nav.unitKey) ? g.units[nav.unitKey] : null; }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function applyTheme(theme){
+    const root = document.documentElement.style;
+    root.setProperty("--teal", theme.primary);
+    root.setProperty("--teal-dark", theme.primaryDark);
+    root.setProperty("--coral", theme.accent);
+    root.setProperty("--coral-dark", theme.accentDark);
+  }
+  function resetTheme(){
+    applyTheme({ primary:"#06B6A4", primaryDark:"#048C7F", accent:"#FF8A5B", accentDark:"#E96A3A" });
+  }
+
+  /* =========================================================
+     3) AUDIO - Web Audio API (no external files)
+     ========================================================= */
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){
+      try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; }
+    } else if(audioCtx.state === "suspended"){
+      audioCtx.resume();
+    }
+  }
+  function playTone(freq, start, dur, type, peakVol){
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    const t0 = audioCtx.currentTime + start;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peakVol || 0.18, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+  function playClick(){ ensureAudio(); playTone(520, 0, 0.08, "triangle", 0.12); }
+  function playCorrect(){
+    ensureAudio();
+    playTone(523.25, 0, 0.14, "sine", 0.2);
+    playTone(659.25, 0.10, 0.14, "sine", 0.2);
+    playTone(783.99, 0.20, 0.22, "sine", 0.22);
+  }
+  function playWrong(){
+    ensureAudio();
+    playTone(300, 0, 0.16, "sawtooth", 0.12);
+    playTone(220, 0.12, 0.22, "sawtooth", 0.12);
+  }
+  function playFanfare(){
+    ensureAudio();
+    const notes = [523.25,587.33,659.25,783.99,987.77];
+    notes.forEach((f,i)=> playTone(f, i*0.13, 0.24, "triangle", 0.2));
+  }
+  function speak(text){
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.85;
+    u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }
+
+  /* =========================================================
+     4) SCREEN HELPERS
+     ========================================================= */
+  const screens = {
+    home: document.getElementById("screen-home"),
+    grades: document.getElementById("screen-grades"),
+    units: document.getElementById("screen-units"),
+    models: document.getElementById("screen-models"),
+    story: document.getElementById("screen-story"),
+    quiz: document.getElementById("screen-quiz"),
+    result: document.getElementById("screen-result")
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove("active"));
+    screens[name].classList.add("active");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  function setMascotFace(el, face){
+    el.classList.remove("sad");
+    if(face === "sad") el.classList.add("sad");
+  }
+  function bounceMascot(el){
+    el.classList.remove("shake"); void el.offsetWidth;
+    el.classList.add("bounce");
+    setTimeout(()=>el.classList.remove("bounce"), 600);
+  }
+  function shakeMascot(el){
+    el.classList.remove("bounce"); void el.offsetWidth;
+    el.classList.add("shake");
+    setTimeout(()=>el.classList.remove("shake"), 550);
+  }
+  function renderBreadcrumb(container, parts){
+    container.innerHTML = "";
+    parts.forEach((p, i)=>{
+      const isLast = i === parts.length-1;
+      const el = document.createElement(isLast ? "span" : "button");
+      el.className = "crumb" + (isLast ? " crumb-current" : "");
+      el.textContent = p.label;
+      if(!isLast) el.addEventListener("click", ()=>{ playClick(); p.onClick(); });
+      container.appendChild(el);
+      if(!isLast){
+        const sep = document.createElement("span");
+        sep.className = "crumb-sep";
+        sep.textContent = " › ";
+        container.appendChild(sep);
+      }
+    });
+  }
+
+  /* =========================================================
+     5) HOME - subjects
+     ========================================================= */
+  const subjectGrid = document.getElementById("subjectGrid");
+
+  function buildHome(){
+    subjectGrid.innerHTML = "";
+    Object.keys(SUBJECTS).forEach(key=>{
+      const subj = SUBJECTS[key];
+      const hasContent = Object.keys(subj.grades).some(gk => hasAnyUnit(subj.grades[gk]));
+      const div = document.createElement("div");
+      div.className = "choice-card" + (hasContent ? "" : " disabled");
+      if(!hasContent){
+        const badge = document.createElement("span");
+        badge.className = "soon-badge";
+        badge.textContent = "قريبًا";
+        div.appendChild(badge);
+      }
+      div.innerHTML += `<span class="emoji">${subj.icon}</span><span class="name">${subj.name}</span><span class="count">${hasContent ? "اضغط للبدء" : "قريبًا 🔒"}</span>`;
+      if(hasContent){
+        div.addEventListener("click", ()=>{ playClick(); openSubject(key); });
+      }
+      subjectGrid.appendChild(div);
+    });
+  }
+  function hasAnyUnit(grade){
+    if(!grade || !grade.units) return false;
+    return Object.values(grade.units).some(u => u && u.models);
+  }
+
+  function openSubject(key){
+    nav = { subjectKey:key, gradeKey:null, unitKey:null };
+    const subj = SUBJECTS[key];
+    applyTheme(subj.theme);
+    renderBreadcrumb(document.getElementById("crumbGrades"), [
+      { label:"🏠 الرئيسية", onClick: ()=>{ resetTheme(); showScreen("home"); } },
+      { label: subj.icon + " " + subj.name }
+    ]);
+    document.getElementById("gradesTitle").textContent = subj.icon + " " + subj.name + " - اختر الصف";
+    buildGrades(key);
+    showScreen("grades");
+  }
+
+  /* =========================================================
+     6) GRADES
+     ========================================================= */
+  const gradeGrid = document.getElementById("gradeGrid");
+  function buildGrades(subjectKey){
+    const subj = SUBJECTS[subjectKey];
+    gradeGrid.innerHTML = "";
+    Object.keys(subj.grades).forEach(gKey=>{
+      const grade = subj.grades[gKey];
+      const active = hasAnyUnit(grade);
+      const div = document.createElement("div");
+      div.className = "choice-card" + (active ? "" : " disabled");
+      if(!active){
+        const badge = document.createElement("span");
+        badge.className = "soon-badge";
+        badge.textContent = "قريبًا";
+        div.appendChild(badge);
+      }
+      div.innerHTML += `<span class="emoji">🎒</span><span class="name">${grade.name}</span><span class="count">${active ? "اضغط للمتابعة" : "قريبًا 🔒"}</span>`;
+      if(active) div.addEventListener("click", ()=>{ playClick(); openGrade(subjectKey, gKey); });
+      gradeGrid.appendChild(div);
+    });
+  }
+
+  function openGrade(subjectKey, gradeKey){
+    nav.gradeKey = gradeKey;
+    nav.unitKey = null;
+    const subj = SUBJECTS[subjectKey];
+    const grade = subj.grades[gradeKey];
+    renderBreadcrumb(document.getElementById("crumbUnits"), [
+      { label:"🏠 الرئيسية", onClick: ()=>{ resetTheme(); showScreen("home"); } },
+      { label: subj.icon + " " + subj.name, onClick: ()=> openSubject(subjectKey) },
+      { label: grade.name }
+    ]);
+    document.getElementById("unitsTitle").textContent = grade.name + " - اختر الوحدة";
+    buildUnits(subjectKey, gradeKey);
+    showScreen("units");
+  }
+
+  /* =========================================================
+     7) UNITS
+     ========================================================= */
+  const unitGrid = document.getElementById("unitGrid");
+  function buildUnits(subjectKey, gradeKey){
+    const grade = SUBJECTS[subjectKey].grades[gradeKey];
+    unitGrid.innerHTML = "";
+    Object.keys(grade.units).forEach(uKey=>{
+      const unit = grade.units[uKey];
+      const active = !!(unit && unit.models);
+      const div = document.createElement("div");
+      div.className = "choice-card" + (active ? "" : " disabled");
+      if(!active){
+        const badge = document.createElement("span");
+        badge.className = "soon-badge";
+        badge.textContent = "قريبًا";
+        div.appendChild(badge);
+      }
+      const modelCount = active ? Object.keys(unit.models).length : 0;
+      div.innerHTML += `<span class="emoji">${unit.icon || "📘"}</span><span class="name">${unit.name}</span><span class="count">${active ? modelCount + " نماذج اختبار" : "قريبًا 🔒"}</span>`;
+      if(active) div.addEventListener("click", ()=>{ playClick(); openUnit(subjectKey, gradeKey, uKey); });
+      unitGrid.appendChild(div);
+    });
+  }
+
+  function openUnit(subjectKey, gradeKey, unitKey){
+    nav.unitKey = unitKey;
+    const subj = SUBJECTS[subjectKey];
+    const grade = subj.grades[gradeKey];
+    const unit = grade.units[unitKey];
+    renderBreadcrumb(document.getElementById("crumbModels"), [
+      { label:"🏠 الرئيسية", onClick: ()=>{ resetTheme(); showScreen("home"); } },
+      { label: subj.icon + " " + subj.name, onClick: ()=> openSubject(subjectKey) },
+      { label: grade.name, onClick: ()=> openGrade(subjectKey, gradeKey) },
+      { label: unit.name }
+    ]);
+    document.getElementById("modelsTitle").textContent = unit.name + " - اختر النموذج";
+    buildModels(unit);
+    showScreen("models");
+  }
+
+  /* =========================================================
+     8) MODELS (A/B/C + Mix) within a unit
+     ========================================================= */
+  const modelGrid = document.getElementById("modelGrid");
+  let pendingModelKey = null;
+
+  function buildModels(unit){
+    modelGrid.innerHTML = "";
+    Object.keys(unit.models).forEach(key=>{
+      const m = unit.models[key];
+      const div = document.createElement("div");
+      div.className = "choice-card";
+      div.innerHTML = `<span class="emoji">${m.emoji}</span><span class="name">${m.label}</span><span class="count">${m.questions.length} سؤال</span>`;
+      div.addEventListener("click", ()=>{ ensureAudio(); playClick(); openStory(key); });
+      modelGrid.appendChild(div);
+    });
+    const total = Object.values(unit.models).reduce((sum,m)=>sum+m.questions.length,0);
+    const mix = document.createElement("div");
+    mix.className = "choice-card wide featured";
+    mix.innerHTML = `<span class="emoji">🏆</span><span class="name">التحدي الكبير - كل الأسئلة</span><span class="count">${total} سؤال من كل النماذج</span>`;
+    mix.addEventListener("click", ()=>{ ensureAudio(); playClick(); openStory("MIX"); });
+    modelGrid.appendChild(mix);
+  }
+
+  /* =========================================================
+     9) STORY
+     ========================================================= */
+  const storyTitle = document.getElementById("storyTitle");
+  const storyText = document.getElementById("storyText");
+  const btnListen = document.getElementById("btnListen");
+  const btnBackModels = document.getElementById("btnBackModels");
+  const btnStartQuiz = document.getElementById("btnStartQuiz");
+
+  function openStory(key){
+    pendingModelKey = key;
+    const unit = currentUnit();
+    renderBreadcrumb(document.getElementById("crumbStory"), [
+      { label:"🏠 الرئيسية", onClick: ()=>{ resetTheme(); showScreen("home"); } },
+      { label: currentSubject().icon + " " + currentSubject().name, onClick: ()=> openSubject(nav.subjectKey) },
+      { label: currentGrade().name, onClick: ()=> openGrade(nav.subjectKey, nav.gradeKey) },
+      { label: unit.name, onClick: ()=> openUnit(nav.subjectKey, nav.gradeKey, nav.unitKey) },
+      { label: key === "MIX" ? "التحدي الكبير" : unit.models[key].label }
+    ]);
+    if(key === "MIX"){
+      storyTitle.textContent = "🏆 التحدي الكبير";
+      storyText.style.whiteSpace = "pre-line";
+      storyText.textContent = Object.values(unit.models).map(m=>m.story).join("\n\n");
+    } else {
+      const m = unit.models[key];
+      storyTitle.textContent = "📖 " + m.storyTitle;
+      storyText.style.whiteSpace = "normal";
+      storyText.textContent = m.story;
+    }
+    showScreen("story");
+  }
+
+  btnListen.addEventListener("click", ()=>{
+    ensureAudio(); playClick();
+    speak(storyText.textContent.replace(/\n/g," "));
+  });
+  btnBackModels.addEventListener("click", ()=>{
+    playClick();
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    openUnit(nav.subjectKey, nav.gradeKey, nav.unitKey);
+  });
+  btnStartQuiz.addEventListener("click", ()=>{
+    playClick();
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    startQuiz(pendingModelKey);
+  });
+
+  /* =========================================================
+     10) QUIZ
+     ========================================================= */
+  const progressFill = document.getElementById("progressFill");
+  const scoreChip = document.getElementById("scoreChip");
+  const typeChip = document.getElementById("typeChip");
+  const qCounter = document.getElementById("qCounter");
+  const streakChip = document.getElementById("streakChip");
+  const questionBox = document.getElementById("questionBox");
+  const optionsGrid = document.getElementById("optionsGrid");
+  const feedbackBox = document.getElementById("feedbackBox");
+  const nextWrap = document.getElementById("nextWrap");
+  const btnNext = document.getElementById("btnNext");
+  const mascotQuiz = document.getElementById("mascotQuiz");
+  const btnQuitQuiz = document.getElementById("btnQuitQuiz");
+
+  function startQuiz(key){
+    const unit = currentUnit();
+    let questions;
+    if(key === "MIX"){
+      questions = shuffle(
+        Object.values(unit.models).flatMap(m => m.questions.map(q=>({...q, _bank:m.bank})))
+      );
+    } else {
+      const m = unit.models[key];
+      questions = m.questions.map(q=>({...q, _bank:m.bank}));
+    }
+    quizState = {
+      modelKey: key,
+      questions: questions,
+      index: 0,
+      score: 0,
+      streak: 0,
+      answered: false,
+      nextTimer: null
+    };
+    showScreen("quiz");
+    renderQuestion();
+  }
+
+  function renderQuestion(){
+    clearTimeout(quizState.nextTimer);
+    quizState.answered = false;
+    const q = quizState.questions[quizState.index];
+
+    const pct = Math.round((quizState.index / quizState.questions.length) * 100);
+    progressFill.style.width = pct + "%";
+    qCounter.textContent = "سؤال " + (quizState.index+1) + " من " + quizState.questions.length;
+    scoreChip.textContent = "⭐ " + quizState.score;
+    typeChip.textContent = TYPE_LABELS[q.type] || "📝 سؤال";
+    if(quizState.streak >= 3){
+      streakChip.style.display = "inline-block";
+      streakChip.textContent = "🔥 " + quizState.streak + " متتالية";
+    } else {
+      streakChip.style.display = "none";
+    }
+
+    setMascotFace(mascotQuiz, "happy");
+    questionBox.innerHTML = q.prompt.replace("___", '<span class="blank">_____</span>');
+
+    feedbackBox.className = "feedback-box";
+    feedbackBox.innerHTML = "";
+    nextWrap.style.display = "none";
+
+    optionsGrid.innerHTML = "";
+    let optionTexts, correctIndex;
+    if(q.type === "fill"){
+      optionTexts = q._bank;
+      correctIndex = q.correct;
+      optionsGrid.className = "options-grid chips";
+    } else if(q.type === "tf"){
+      optionTexts = q.options;
+      correctIndex = q.correct;
+      optionsGrid.className = "options-grid grid-2";
+    } else {
+      optionTexts = q.options;
+      correctIndex = q.correct;
+      optionsGrid.className = "options-grid grid-2x2";
+    }
+
+    const letters = ["a","b","c","d","e"];
+    optionTexts.forEach((text, idx)=>{
+      const btn = document.createElement("button");
+      btn.className = "opt-btn" + (q.type === "fill" ? " chip" : "");
+      if(q.type === "mcq"){
+        btn.innerHTML = `<span class="letter">${letters[idx]}</span>${text}`;
+      } else {
+        btn.textContent = text;
+      }
+      btn.addEventListener("click", ()=> selectAnswer(idx, correctIndex, btn));
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(chosenIdx, correctIdx, btnEl){
+    if(quizState.answered) return;
+    quizState.answered = true;
+    ensureAudio();
+
+    const allBtns = optionsGrid.querySelectorAll(".opt-btn");
+    allBtns.forEach(b=>b.classList.add("locked"));
+
+    const isCorrect = chosenIdx === correctIdx;
+
+    if(isCorrect){
+      btnEl.classList.add("correct");
+      quizState.score++;
+      quizState.streak++;
+      playCorrect();
+      bounceMascot(mascotQuiz);
+      setMascotFace(mascotQuiz, "happy");
+      feedbackBox.className = "feedback-box show ok";
+      feedbackBox.innerHTML = pickCorrectPhrase();
+    } else {
+      btnEl.classList.add("wrong");
+      allBtns[correctIdx].classList.add("correct");
+      quizState.streak = 0;
+      playWrong();
+      shakeMascot(mascotQuiz);
+      setMascotFace(mascotQuiz, "sad");
+      const correctText = allBtns[correctIdx].textContent;
+      feedbackBox.className = "feedback-box show no";
+      feedbackBox.innerHTML = pickWrongPhrase(correctText);
+    }
+
+    allBtns.forEach((b,i)=>{
+      if(i !== chosenIdx && i !== correctIdx) b.classList.add("dim");
+    });
+
+    scoreChip.textContent = "⭐ " + quizState.score;
+    nextWrap.style.display = "block";
+    quizState.nextTimer = setTimeout(()=>{ goNext(); }, 2200);
+  }
+
+  const CORRECT_PHRASES = ["🎉 رائع! إجابة صحيحة","👏 ممتاز! أحسنت","🌟 برافو عليك!","✅ صحيح! أنت بطل"];
+  function pickCorrectPhrase(){ return CORRECT_PHRASES[Math.floor(Math.random()*CORRECT_PHRASES.length)]; }
+  function pickWrongPhrase(correctText){
+    return `💡 لا بأس، حاول مجدداً! الإجابة الصحيحة: <span style="direction:ltr;display:inline-block;">${correctText}</span>`;
+  }
+
+  btnNext.addEventListener("click", ()=>{ playClick(); goNext(); });
+  btnQuitQuiz.addEventListener("click", ()=>{
+    playClick();
+    clearTimeout(quizState.nextTimer);
+    openUnit(nav.subjectKey, nav.gradeKey, nav.unitKey);
+  });
+
+  function goNext(){
+    clearTimeout(quizState.nextTimer);
+    quizState.index++;
+    if(quizState.index >= quizState.questions.length){
+      finishQuiz();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  /* =========================================================
+     11) RESULT
+     ========================================================= */
+  const resultModelLabel = document.getElementById("resultModelLabel");
+  const scoreBig = document.getElementById("scoreBig");
+  const badgeText = document.getElementById("badgeText");
+  const encourageText = document.getElementById("encourageText");
+  const starEls = [document.getElementById("star1"), document.getElementById("star2"), document.getElementById("star3")];
+  const mascotResult = document.getElementById("mascotResult");
+  const btnRetry = document.getElementById("btnRetry");
+  const btnAnotherUnit = document.getElementById("btnAnotherUnit");
+  const btnHome = document.getElementById("btnHome");
+
+  function finishQuiz(){
+    progressFill.style.width = "100%";
+    const total = quizState.questions.length;
+    const pct = Math.round((quizState.score/total)*100);
+
+    let stars = 0;
+    if(pct >= 90) stars = 3;
+    else if(pct >= 70) stars = 2;
+    else if(pct >= 50) stars = 1;
+
+    let badge, encourage, mascotFace;
+    if(pct >= 90){ badge="🏅 نجم القراءة الذهبي"; encourage="أداء مذهل! أنت تتقن هذه الوحدة تماماً 🎊"; mascotFace="happy"; }
+    else if(pct >= 70){ badge="🥈 بطل صاعد"; encourage="أحسنت! بقليل من المراجعة ستصبح نجماً ذهبياً ✨"; mascotFace="happy"; }
+    else if(pct >= 50){ badge="🌱 نجم مبتدئ"; encourage="بداية جيدة! راجع القصة والكلمات وحاول مرة أخرى 💪"; mascotFace="sad"; }
+    else { badge="📚 استمر بالتدريب"; encourage="لا تقلق، كل خبير كان مبتدئاً يوماً ما. جرّب مرة أخرى! 🌈"; mascotFace="sad"; }
+
+    const unit = currentUnit();
+    resultModelLabel.textContent = currentSubject().name + " - " + currentGrade().name + " - " + unit.name + " - " +
+      (quizState.modelKey === "MIX" ? "التحدي الكبير" : unit.models[quizState.modelKey].label);
+    scoreBig.innerHTML = quizState.score + ' <span>/ ' + total + '</span>';
+    badgeText.textContent = badge;
+    encourageText.textContent = encourage;
+    setMascotFace(mascotResult, mascotFace);
+
+    showScreen("result");
+
+    starEls.forEach(s=>s.classList.remove("on"));
+    for(let i=0;i<stars;i++){
+      setTimeout(()=>{ starEls[i].classList.add("on"); playClick(); }, 300 + i*260);
+    }
+    if(stars >= 2){
+      setTimeout(()=>{ playFanfare(); burstConfetti(); }, 300 + stars*260);
+    } else if(stars === 0 && pct < 50){
+      setTimeout(()=>{ playWrong(); }, 300);
+    }
+  }
+
+  function burstConfetti(){
+    const colors = ["#06B6A4","#FF8A5B","#FF5D8F","#8B6FE0","#FFC94D","#2FBE6C"];
+    const count = 70;
+    for(let i=0;i<count;i++){
+      const piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.left = Math.random()*100 + "vw";
+      const duration = 2.2 + Math.random()*1.6;
+      const delay = Math.random()*0.4;
+      piece.style.animation = `confettiFall ${duration}s ease-in ${delay}s forwards`;
+      piece.style.transform = `rotate(${Math.random()*360}deg)`;
+      if(Math.random() > 0.5) piece.style.borderRadius = "50%";
+      document.body.appendChild(piece);
+      setTimeout(()=>piece.remove(), (duration+delay)*1000 + 200);
+    }
+  }
+
+  btnRetry.addEventListener("click", ()=>{ playClick(); startQuiz(quizState.modelKey); });
+  btnAnotherUnit.addEventListener("click", ()=>{ playClick(); openUnit(nav.subjectKey, nav.gradeKey, nav.unitKey); });
+  btnHome.addEventListener("click", ()=>{ playClick(); resetTheme(); showScreen("home"); });
+
+  /* =========================================================
+     12) INIT
+     ========================================================= */
+  buildHome();
+
+})();
+</script>
+</body>
+</html>
