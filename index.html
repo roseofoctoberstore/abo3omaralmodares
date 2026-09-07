@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🌟 منصة الاختبارات التفاعلية</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg1:#EAF6FF; --bg2:#FFF6E1;
+    --ink:#1B3A4B; --ink-soft:#4A6B7A;
+    --teal:#06B6A4; --teal-dark:#048C7F;
+    --coral:#FF8A5B; --coral-dark:#E96A3A;
+    --pink:#FF5D8F; --purple:#8B6FE0; --yellow:#FFC94D;
+    --green:#2FBE6C; --green-dark:#1F9C57;
+    --red:#FF5C5C; --red-dark:#E23E4E;
+    --card-bg:#FFFFFF;
+    --radius-lg:28px; --radius-md:18px; --radius-sm:12px;
+    --shadow: 0 14px 34px rgba(27,58,75,0.14);
+    --shadow-sm: 0 6px 16px rgba(27,58,75,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100vh;font-family:'Trebuchet MS','Segoe UI','Tahoma',sans-serif;color:var(--ink);background:linear-gradient(160deg,var(--bg1) 0%, var(--bg2) 100%);overflow-x:hidden;}
+  .bg-decor{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+  .blob{position:absolute;border-radius:50%;opacity:.55;filter:blur(1px);}
+  .blob.sun{width:150px;height:150px;background:radial-gradient(circle at 35% 35%,#FFE29A,var(--yellow));top:-40px;right:-30px;animation:float 7s ease-in-out infinite;}
+  .blob.cloud{background:#fff;opacity:.8;border-radius:50px;}
+  .cloud1{width:110px;height:44px;top:10%;left:6%;animation:drift 18s linear infinite;}
+  .cloud2{width:80px;height:34px;top:70%;left:80%;animation:drift 22s linear infinite reverse;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
+  @keyframes drift{0%{transform:translateX(0);}100%{transform:translateX(40px);}}
+
+  .app-shell{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 14px;}
+  .card{width:100%;max-width:720px;background:var(--card-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:28px 26px 26px;position:relative;overflow:hidden;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:10px;background:linear-gradient(90deg,#06B6A4,#FF8A5B,#FF5D8F,#8B6FE0,#FFC94D);}
+  .screen{display:none;} .screen.active{display:block;animation:fadeSlideIn .4s ease;}
+  @keyframes fadeSlideIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  h1.title{font-size:24px;margin:6px 0 4px;text-align:center;}
+  p.subtitle{text-align:center;color:var(--ink-soft);margin:0 0 18px;font-size:14.5px;}
+
+  .crumb-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px;margin-bottom:18px;font-size:13px;}
+  .crumb{background:none;border:none;cursor:pointer;color:var(--teal-dark);font-family:inherit;font-weight:700;font-size:13px;padding:4px;border-radius:8px;}
+  .crumb:hover{background:#EAF6FF;text-decoration:underline;}
+  .crumb-current{color:var(--ink-soft);font-weight:700;padding:4px;}
+  .crumb-sep{color:#B9CBD2;}
+
+  .mascot-wrap{display:flex;justify-content:center;margin-bottom:10px;}
+  .mascot{width:78px;height:78px;border-radius:50%;position:relative;background:radial-gradient(circle at 35% 30%,#FFE29A,var(--yellow));box-shadow:var(--shadow-sm);transition:transform .25s ease;}
+  .mascot .eye{position:absolute;width:10px;height:10px;background:var(--ink);border-radius:50%;top:29px;animation:blink 4s infinite;}
+  .mascot .eye.left{left:20px;} .mascot .eye.right{right:20px;}
+  .mascot .mouth{position:absolute;bottom:17px;left:50%;transform:translateX(-50%);width:25px;height:12px;border:3px solid var(--ink);border-top:none;border-bottom-left-radius:13px;border-bottom-right-radius:13px;}
+  .mascot.sad .mouth{border:3px solid var(--ink);border-bottom:none;border-top-left-radius:13px;border-top-right-radius:13px;bottom:14px;}
+  .mascot.bounce{animation:bounce .55s ease;} .mascot.shake{animation:shake .5s ease;}
+  @keyframes bounce{0%{transform:scale(1);}30%{transform:scale(1.18) translateY(-10px);}60%{transform:scale(.95) translateY(2px);}100%{transform:scale(1);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px) rotate(-4deg);}40%{transform:translateX(8px) rotate(4deg);}60%{transform:translateX(-6px) rotate(-3deg);}80%{transform:translateX(6px) rotate(3deg);}}
+  @keyframes blink{0%,92%,100%{transform:scaleY(1);}96%{transform:scaleY(.1);}}
+
+  .btn{border:none;cursor:pointer;font-family:inherit;font-weight:700;border-radius:var(--radius-md);padding:13px 18px;font-size:15.5px;transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;box-shadow:var(--shadow-sm);}
+  .btn:active{transform:scale(.96);}
+  .btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;}
+  .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px);}
+  .btn-coral{background:linear-gradient(135deg,var(--coral),var(--coral-dark));color:#fff;}
+  .btn-coral:hover{filter:brightness(1.06);transform:translateY(-2px);}
+  .btn-ghost{background:#F2F7F8;color:var(--ink);}
+  .btn-ghost:hover{background:#E7F0F1;}
+  .btn-danger{background:#FFEDED;color:var(--red-dark);}
+  .btn-danger:hover{background:#FFDCDC;}
+  .btn-sm{padding:8px 12px;font-size:13px;border-radius:12px;}
+  .btn-block{width:100%;display:block;}
+
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+  .choice-card{background:#F7FBFC;border:2px solid #E4EEF0;border-radius:var(--radius-md);padding:16px 10px;text-align:center;cursor:pointer;transition:.18s ease;position:relative;}
+  .choice-card:hover{border-color:var(--teal);transform:translateY(-3px);box-shadow:var(--shadow-sm);}
+  .choice-card .emoji{font-size:30px;display:block;margin-bottom:6px;}
+  .choice-card .name{font-weight:700;font-size:15px;}
+  .choice-card .count{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .choice-card.wide{grid-column:1/-1;}
+  .choice-card.featured{background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;}
+  .choice-card.featured .count{color:rgba(255,255,255,.85);}
+  .choice-card.empty{opacity:.6;cursor:default;}
+  .choice-card.empty:hover{transform:none;box-shadow:none;border-color:#E4EEF0;}
+
+  .story-box{background:#FBF7EC;border:2px dashed var(--yellow);border-radius:var(--radius-md);padding:18px;margin:14px 0 16px;direction:ltr;text-align:left;font-size:16.5px;line-height:1.65;color:#5C4A1E;}
+  .story-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
+  .name-field{margin:14px 0;}
+  .name-field label{display:block;font-size:14px;font-weight:700;margin-bottom:6px;color:var(--ink-soft);}
+  .name-field input{width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:2px solid #E4EEF0;font-size:16px;font-family:inherit;}
+  .name-field input:focus{outline:none;border-color:var(--teal);}
+  .name-warn{color:var(--red-dark);font-size:13px;margin-top:4px;display:none;}
+
+  .quiz-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .progress-track{flex:1;height:14px;background:#EAF1F2;border-radius:20px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--teal),var(--coral));width:0%;transition:width .4s ease;}
+  .score-chip{background:var(--yellow);color:#5C4A1E;font-weight:800;font-size:13px;padding:6px 12px;border-radius:20px;white-space:nowrap;}
+  .q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;color:var(--ink-soft);}
+  .type-chip{display:inline-block;padding:4px 12px;border-radius:14px;font-size:12.5px;font-weight:700;background:#EAF6FF;color:var(--teal-dark);}
+  .streak-chip{color:var(--coral-dark);font-weight:800;font-size:13px;}
+  .question-box{direction:ltr;text-align:left;font-size:19px;font-weight:700;line-height:1.5;margin:8px 0 18px;}
+  .question-box .blank{display:inline-block;min-width:56px;border-bottom:3px solid var(--coral);color:var(--coral-dark);text-align:center;}
+  .options-grid{display:grid;gap:12px;}
+  .options-grid.grid-2{grid-template-columns:1fr 1fr;}
+  .options-grid.grid-2x2{grid-template-columns:1fr 1fr;}
+  .options-grid.chips{grid-template-columns:repeat(auto-fit,minmax(100px,1fr));}
+  .opt-btn{direction:ltr;text-align:left;background:#F7FBFC;border:2px solid #E4EEF0;border-radius:var(--radius-md);padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;color:var(--ink);transition:.15s ease;position:relative;}
+  .opt-btn .letter{display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;background:var(--teal);color:#fff;border-radius:50%;font-size:12px;margin-right:8px;}
+  .opt-btn:hover:not(.locked){border-color:var(--teal);transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+  .opt-btn.chip{text-align:center;border-radius:24px;padding:12px 14px;}
+  .opt-btn.correct{background:#E7FBEF;border-color:var(--green);color:var(--green-dark);animation:pop .35s ease;}
+  .opt-btn.wrong{background:#FFEDED;border-color:var(--red);color:var(--red-dark);animation:shake .45s ease;}
+  .opt-btn.dim{opacity:.5;} .opt-btn.locked{cursor:default;}
+  @keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+  .feedback-box{margin-top:16px;padding:14px 16px;border-radius:var(--radius-md);font-weight:700;font-size:15px;display:none;align-items:center;gap:8px;}
+  .feedback-box.show{display:flex;animation:fadeSlideIn .3s ease;}
+  .feedback-box.ok{background:#E7FBEF;color:var(--green-dark);} .feedback-box.no{background:#FFEDED;color:var(--red-dark);}
+  .next-wrap{margin-top:16px;text-align:center;}
+  .quiz-footer-nav{margin-top:14px;text-align:center;}
+  .quiz-footer-nav button{background:none;border:none;color:var(--ink-soft);font-size:12.5px;cursor:pointer;text-decoration:underline;font-family:inherit;}
+
+  .result-title{text-align:center;font-size:24px;margin-bottom:4px;}
+  .result-sub{text-align:center;color:var(--ink-soft);margin-bottom:18px;font-size:13.5px;}
+  .stars-row{display:flex;justify-content:center;gap:14px;margin:18px 0;}
+  .stars-row .star{font-size:52px;opacity:.25;transform:scale(.6);transition:.4s ease;}
+  .stars-row .star.on{opacity:1;transform:scale(1);}
+  .score-big{text-align:center;font-size:40px;font-weight:800;color:var(--teal-dark);margin:6px 0;}
+  .score-big span{font-size:20px;color:var(--ink-soft);font-weight:600;}
+  .badge{text-align:center;font-weight:800;font-size:17px;margin:10px 0 6px;color:var(--coral-dark);}
+  .encourage{text-align:center;color:var(--ink-soft);margin-bottom:20px;font-size:14.5px;}
+  .result-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .result-actions .btn{flex:1;min-width:130px;}
+
+  .confetti-piece{position:fixed;top:-20px;width:10px;height:14px;z-index:50;border-radius:2px;pointer-events:none;}
+  @keyframes confettiFall{to{transform:translateY(110vh) rotate(540deg);opacity:.9;}}
+
+  footer.made{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:16px;opacity:.7;}
+  .home-admin-link{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:var(--ink-soft);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;}
+
+  /* ---------- setup / loading / error screens ---------- */
+  .center-box{text-align:center;padding:20px 6px;}
+  .center-box .big-emoji{font-size:44px;display:block;margin-bottom:10px;}
+  .setup-steps{text-align:right;background:#F7FBFC;border-radius:var(--radius-md);padding:16px 18px;font-size:14px;line-height:1.9;margin:14px 0;}
+  code.inline{background:#EAF1F2;padding:2px 6px;border-radius:6px;font-size:13px;direction:ltr;display:inline-block;}
+
+  /* ---------- admin ---------- */
+  .admin-tabs{display:flex;gap:8px;margin-bottom:18px;justify-content:center;flex-wrap:wrap;}
+  .admin-tab{background:#F2F7F8;border:none;border-radius:14px;padding:9px 16px;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--ink-soft);}
+  .admin-tab.active{background:var(--teal);color:#fff;}
+  .admin-section{background:#F7FBFC;border:2px solid #E4EEF0;border-radius:var(--radius-md);padding:16px;margin-bottom:16px;}
+  .admin-section h3{margin:0 0 12px;font-size:15px;color:var(--ink);}
+  .field-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+  .field{flex:1;min-width:140px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:700;margin-bottom:4px;}
+  .field input[type=text], .field input[type=number], .field textarea, .field select{
+    width:100%;padding:10px 12px;border-radius:12px;border:2px solid #E4EEF0;font-family:inherit;font-size:14px;
+  }
+  .field input[type=color]{width:52px;height:38px;border-radius:10px;border:2px solid #E4EEF0;padding:2px;cursor:pointer;}
+  .field textarea{min-height:70px;resize:vertical;}
+  .field select{cursor:pointer;}
+  .form-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .admin-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  .admin-table th, .admin-table td{border-bottom:1px solid #E4EEF0;padding:8px 6px;text-align:right;}
+  .admin-table th{color:var(--ink-soft);font-size:12px;}
+  .admin-table td.actions{white-space:nowrap;}
+  .icon-btn{background:none;border:none;cursor:pointer;font-size:15px;padding:2px 5px;}
+  .radio-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;}
+  .radio-row label{display:flex;align-items:center;gap:5px;font-size:13.5px;background:#fff;border:2px solid #E4EEF0;border-radius:10px;padding:6px 10px;cursor:pointer;}
+  .radio-row input{cursor:pointer;}
+  .chips-pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .chip-pick{padding:7px 12px;border-radius:16px;border:2px solid #E4EEF0;background:#fff;font-size:13.5px;cursor:pointer;}
+  .chip-pick.selected{background:var(--green);border-color:var(--green);color:#fff;font-weight:700;}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .search-box{width:100%;padding:10px 12px;border-radius:12px;border:2px solid #E4EEF0;font-family:inherit;font-size:14px;margin-bottom:10px;}
+  .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .stat-pill{background:#EAF6FF;color:var(--teal-dark);font-weight:800;font-size:13px;padding:8px 14px;border-radius:14px;}
+
+  @media (max-width:420px){
+    .card{padding:20px 14px 16px;} h1.title{font-size:20px;}
+    .options-grid.grid-2x2{grid-template-columns:1fr;} .choice-grid{grid-template-columns:1fr;}
+    .question-box{font-size:17px;}
+  }
+  @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}}
+</style>
+</head>
+<body>
+
+<div class="bg-decor">
+  <div class="blob sun"></div>
+  <div class="blob cloud cloud1"></div>
+  <div class="blob cloud cloud2"></div>
+</div>
+
+<div class="app-shell">
+  <div class="card" id="card">
+
+    <!-- SETUP NOTICE -->
+    <section class="screen" id="screen-setup">
+      <div class="center-box">
+        <span class="big-emoji">🛠️</span>
+        <h1 class="title">لازم نظبط الاتصال بقاعدة البيانات أولاً</h1>
+        <p class="subtitle">التطبيق محتاج مفاتيح Supabase عشان يشتغل</p>
+        <div class="setup-steps">
+          1) افتح ملف الكود وابحث عن <code class="inline">SUPABASE_URL</code> و <code class="inline">SUPABASE_ANON_KEY</code> في أول السكريبت.<br><br>
+          2) استبدلهم بالقيم اللي هتلاقيها في Supabase تحت Project Settings › API.<br><br>
+          3) تأكد إنك شغّلت ملف <code class="inline">supabase-setup.sql</code> مرة واحدة في SQL Editor.<br><br>
+          4) احفظ الملف وافتحه تاني (لازم يكون فيه إنترنت).
+        </div>
+        <button class="btn btn-primary" id="btnRecheck">🔄 إعادة المحاولة</button>
+      </div>
+    </section>
+
+    <!-- LOADING -->
+    <section class="screen" id="screen-loading">
+      <div class="center-box">
+        <span class="big-emoji">⏳</span>
+        <h1 class="title">لحظة واحدة...</h1>
+        <p class="subtitle">بنجيب المحتوى من قاعدة البيانات</p>
+      </div>
+    </section>
+
+    <!-- ERROR -->
+    <section class="screen" id="screen-error">
+      <div class="center-box">
+        <span class="big-emoji">😕</span>
+        <h1 class="title">حصلت مشكلة في الاتصال</h1>
+        <p class="subtitle" id="errorDetail">تأكد إن الإنترنت شغال وإن مفاتيح Supabase صح</p>
+        <button class="btn btn-primary" id="btnRetryLoad">🔄 حاول تاني</button>
+      </div>
+    </section>
+
+    <!-- HOME -->
+    <section class="screen" id="screen-home">
+      <div class="mascot-wrap"><div class="mascot" id="mascotHome"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title">🌟 منصة الاختبارات التفاعلية</h1>
+      <p class="subtitle">اختر المادة عشان نبدأ رحلة التعلم! 🚀</p>
+      <div class="choice-grid" id="subjectGrid"></div>
+      <button class="home-admin-link" id="btnAdminEnter">🔐 لوحة المعلم</button>
+      <footer class="made">محتوى الاختبارات محفوظ على قاعدة بيانات Supabase 💙</footer>
+    </section>
+
+    <!-- GRADES -->
+    <section class="screen" id="screen-grades">
+      <div class="crumb-bar" id="crumbGrades"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotGrades"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="gradesTitle">اختر الصف الدراسي</h1>
+      <p class="subtitle">📚 حدد صفك عشان نجيبلك الاختبارات المناسبة</p>
+      <div class="choice-grid" id="gradeGrid"></div>
+    </section>
+
+    <!-- UNITS -->
+    <section class="screen" id="screen-units">
+      <div class="crumb-bar" id="crumbUnits"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotUnits"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="unitsTitle">اختر الوحدة</h1>
+      <p class="subtitle">📘 كل وحدة فيها اختبارات ونماذج جاهزة</p>
+      <div class="choice-grid" id="unitGrid"></div>
+    </section>
+
+    <!-- MODELS -->
+    <section class="screen" id="screen-models">
+      <div class="crumb-bar" id="crumbModels"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotModels"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="modelsTitle">اختر النموذج</h1>
+      <p class="subtitle">اختر النموذج الذي تريد تجربته وابدأ المغامرة! 🚀</p>
+      <div class="choice-grid" id="modelGrid"></div>
+    </section>
+
+    <!-- STORY -->
+    <section class="screen" id="screen-story">
+      <div class="crumb-bar" id="crumbStory"></div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotStory"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <h1 class="title" id="storyTitle">📖 اقرأ القصة أولاً</h1>
+      <p class="subtitle">اقرأ بعناية، ستحتاجها في الإجابة عن بعض الأسئلة</p>
+      <div class="story-box" id="storyText"></div>
+      <div class="story-actions">
+        <button class="btn btn-ghost" id="btnListen">🔊 استمع للقصة</button>
+        <button class="btn btn-ghost" id="btnBackModels">↩ رجوع للنماذج</button>
+      </div>
+      <div class="name-field">
+        <label for="studentNameInput">🌟 اكتب اسمك عشان نسجل نتيجتك</label>
+        <input type="text" id="studentNameInput" placeholder="مثال: يوسف أحمد">
+        <div class="name-warn" id="nameWarn">من فضلك اكتب اسمك الأول قبل ما تبدأ 🙂</div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btnStartQuiz">🚀 ابدأ الأسئلة!</button>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="screen" id="screen-quiz">
+      <div class="quiz-top">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="score-chip" id="scoreChip">⭐ 0</div>
+      </div>
+      <div class="q-meta">
+        <span class="type-chip" id="typeChip">📝 سؤال</span>
+        <span id="qCounter">سؤال 1 من 17</span>
+        <span class="streak-chip" id="streakChip" style="display:none;">🔥</span>
+      </div>
+      <div class="mascot-wrap"><div class="mascot" id="mascotQuiz"><div class="eye left"></div><div class="eye right"></div><div class="mouth"></div></div></div>
+      <div class="question-box" id="questionBox"></div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="feedback-box" id="feedbackBox"></div>
+      <div class="next-wrap" id="nextWrap" style="display:none;"><button class="btn btn-coral" id="btnNext">التالي ⏭</button></div>
+      <div class="quiz-footer-nav"><button id="btnQuitQuiz">إنهاء والرجوع للنماذج</button></div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="screen-result">
+      <h1 class="result-title">🏆 النتيجة النهائية</h1>
+      <p class="result-sub" id="resultModelLabel"></p>
+      <div class="mascot-wrap"><div class="mascot" id="mascotResult" style="width:96px;height:96px;"><div class="eye left" style="top:36px;"></div><div class="eye right" style="top:36px;"></div><div class="mouth"></div></div></div>
+      <div class="stars-row" id="starsRow"><span class="star" id="star1">⭐</span><span class="star" id="star2">⭐</span><span class="star" id="star3">⭐</span></div>
+      <div class="score-big" id="scoreBig">0 <span>/ 0</span></div>
+      <div class="badge" id="badgeText"></div>
+      <div class="encourage" id="encourageText"></div>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="btnRetry">🔁 حاول مرة أخرى</button>
+        <button class="btn btn-coral" id="btnAnotherUnit">📘 وحدة أخرى</button>
+        <button class="btn btn-ghost" id="btnHome">🏠 الرئيسية</button>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="screen" id="screen-admin">
+      <h1 class="title">🔐 لوحة المعلم</h1>
+      <p class="subtitle">أضف وعدّل المواد والصفوف والوحدات والأسئلة، وتابع درجات الطلاب</p>
+      <div class="admin-tabs">
+        <button class="admin-tab active" id="tabContent">📚 إدارة المحتوى</button>
+        <button class="admin-tab" id="tabScores">📊 سجل الدرجات</button>
+      </div>
+
+      <div id="adminContentPane"></div>
+      <div id="adminScoresPane" style="display:none;"></div>
+
+      <button class="btn btn-ghost btn-block" id="btnAdminExit" style="margin-top:6px;">↩ رجوع للرئيسية</button>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     0) CONFIG - غيّر القيمتين دول ببيانات مشروعك على Supabase
+     ========================================================= */
+  const SUPABASE_URL = "https://drwyfyntflponzsjuvqz.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_5BhhVtEyQfXPi7oEUSB6CA_ovr9GBv7";
+  const ADMIN_PASSCODE = "1234"; // غيّرها لأي كلمة سر تانية تحبها
+
+  const isConfigured = SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20;
+  let supabase = null;
+  if(isConfigured){
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  const TYPE_LABELS = { tf:"📖 اقرأ بعناية", mcq:"📝 اختر الإجابة الصحيحة", fill:"🧩 أكمل الجملة" };
+  const DEFAULT_THEME = { theme_primary:"#06B6A4", theme_primary_dark:"#048C7F", theme_accent:"#FF8A5B", theme_accent_dark:"#E96A3A" };
+
+  /* =========================================================
+     1) STATE
+     ========================================================= */
+  let tree = null; // { subjects, subjectById, gradeById, unitById, modelById }
+  let nav = { subjectId:null, gradeId:null, unitId:null };
+  let quizState = { modelId:null, questions:[], index:0, score:0, streak:0, answered:false, nextTimer:null };
+  let studentName = "";
+
+  function genKey(){ return "k" + Math.random().toString(36).slice(2,9); }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function applyTheme(subject){
+    const root = document.documentElement.style;
+    root.setProperty("--teal", subject.theme_primary || DEFAULT_THEME.theme_primary);
+    root.setProperty("--teal-dark", subject.theme_primary_dark || DEFAULT_THEME.theme_primary_dark);
+    root.setProperty("--coral", subject.theme_accent || DEFAULT_THEME.theme_accent);
+    root.setProperty("--coral-dark", subject.theme_accent_dark || DEFAULT_THEME.theme_accent_dark);
+  }
+  function resetTheme(){ applyTheme(DEFAULT_THEME); }
+
+  /* =========================================================
+     2) AUDIO
+     ========================================================= */
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){ try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; } }
+    else if(audioCtx.state === "suspended"){ audioCtx.resume(); }
+  }
+  function playTone(freq, start, dur, type, peakVol){
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = type || "sine"; osc.frequency.value = freq;
+    const t0 = audioCtx.currentTime + start;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peakVol || 0.18, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+  function playClick(){ ensureAudio(); playTone(520,0,0.08,"triangle",0.12); }
+  function playCorrect(){ ensureAudio(); playTone(523.25,0,0.14,"sine",0.2); playTone(659.25,0.10,0.14,"sine",0.2); playTone(783.99,0.20,0.22,"sine",0.22); }
+  function playWrong(){ ensureAudio(); playTone(300,0,0.16,"sawtooth",0.12); playTone(220,0.12,0.22,"sawtooth",0.12); }
+  function playFanfare(){ ensureAudio(); [523.25,587.33,659.25,783.99,987.77].forEach((f,i)=> playTone(f, i*0.13, 0.24, "triangle", 0.2)); }
+  function speak(text){
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.85; u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }
+
+  /* =========================================================
+     3) SCREEN HELPERS
+     ========================================================= */
+  const screens = {};
+  ["setup","loading","error","home","grades","units","models","story","quiz","result","admin"].forEach(k=>{
+    screens[k] = document.getElementById("screen-"+k);
+  });
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove("active"));
+    screens[name].classList.add("active");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  function setMascotFace(el, face){ el.classList.remove("sad"); if(face==="sad") el.classList.add("sad"); }
+  function bounceMascot(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("bounce"); setTimeout(()=>el.classList.remove("bounce"),600); }
+  function shakeMascot(el){ el.classList.remove("bounce"); void el.offsetWidth; el.classList.add("shake"); setTimeout(()=>el.classList.remove("shake"),550); }
+  function renderBreadcrumb(container, parts){
+    container.innerHTML = "";
+    parts.forEach((p,i)=>{
+      const isLast = i===parts.length-1;
+      const el = document.createElement(isLast ? "span" : "button");
+      el.className = "crumb" + (isLast ? " crumb-current" : "");
+      el.textContent = p.label;
+      if(!isLast) el.addEventListener("click", ()=>{ playClick(); p.onClick(); });
+      container.appendChild(el);
+      if(!isLast){ const sep=document.createElement("span"); sep.className="crumb-sep"; sep.textContent=" › "; container.appendChild(sep); }
+    });
+  }
+
+  /* =========================================================
+     4) DATA LAYER (Supabase)
+     ========================================================= */
+  async function fetchAllContent(){
+    const [subjectsRes, gradesRes, unitsRes, modelsRes, questionsRes] = await Promise.all([
+      supabase.from("subjects").select("*").order("sort_order"),
+      supabase.from("grades").select("*").order("sort_order"),
+      supabase.from("units").select("*").order("sort_order"),
+      supabase.from("models").select("*").order("sort_order"),
+      supabase.from("questions").select("*").order("sort_order")
+    ]);
+    for(const r of [subjectsRes,gradesRes,unitsRes,modelsRes,questionsRes]){
+      if(r.error) throw r.error;
+    }
+    return buildTree(subjectsRes.data, gradesRes.data, unitsRes.data, modelsRes.data, questionsRes.data);
+  }
+
+  function buildTree(subjectsRows, gradesRows, unitsRows, modelsRows, questionsRows){
+    const subjects = subjectsRows.map(s=>({...s, grades:[]}));
+    const subjectById = Object.fromEntries(subjects.map(s=>[s.id,s]));
+    const grades = gradesRows.map(g=>({...g, units:[]}));
+    grades.forEach(g=>{ const s=subjectById[g.subject_id]; if(s) s.grades.push(g); });
+    const gradeById = Object.fromEntries(grades.map(g=>[g.id,g]));
+    const units = unitsRows.map(u=>({...u, models:[]}));
+    units.forEach(u=>{ const g=gradeById[u.grade_id]; if(g) g.units.push(u); });
+    const unitById = Object.fromEntries(units.map(u=>[u.id,u]));
+    const models = modelsRows.map(m=>({...m, questions:[]}));
+    models.forEach(m=>{ const u=unitById[m.unit_id]; if(u) u.models.push(m); });
+    const modelById = Object.fromEntries(models.map(m=>[m.id,m]));
+    questionsRows.forEach(q=>{ const m=modelById[q.model_id]; if(m) m.questions.push(q); });
+    return { subjects, subjectById, gradeById, unitById, modelById };
+  }
+
+  async function reloadTree(){
+    tree = await fetchAllContent();
+  }
+
+  /* =========================================================
+     5) BOOTSTRAP
+     ========================================================= */
+  async function boot(){
+    if(!isConfigured){ showScreen("setup"); return; }
+    showScreen("loading");
+    try{
+      await reloadTree();
+      buildHome();
+      showScreen("home");
+    }catch(err){
+      document.getElementById("errorDetail").textContent = "تفاصيل الخطأ: " + (err.message || err);
+      showScreen("error");
+    }
+  }
+  document.getElementById("btnRecheck").addEventListener("click", boot);
+  document.getElementById("btnRetryLoad").addEventListener("click", boot);
+
+  /* =========================================================
+     6) HOME
+     ========================================================= */
+  const subjectGrid = document.getElementById("subjectGrid");
+  function hasAnyUnit(subject){
+    return subject.grades.some(g => g.units.some(u => u.models && u.models.length>0));
+  }
+  function buildHome(){
+    subjectGrid.innerHTML = "";
+    if(tree.subjects.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "choice-card wide empty";
+      empty.innerHTML = `<span class="emoji">📭</span><span class="name">لسه مفيش مواد مضافة</span><span class="count">افتح لوحة المعلم عشان تضيف أول مادة</span>`;
+      subjectGrid.appendChild(empty);
+      return;
+    }
+    tree.subjects.forEach(subj=>{
+      const active = hasAnyUnit(subj);
+      const div = document.createElement("div");
+      div.className = "choice-card" + (active ? "" : " empty");
+      div.innerHTML = `<span class="emoji">${subj.icon||"📘"}</span><span class="name">${subj.name}</span><span class="count">${active ? "اضغط للبدء" : "لا يوجد محتوى بعد"}</span>`;
+      if(active) div.addEventListener("click", ()=>{ playClick(); openSubject(subj.id); });
+      subjectGrid.appendChild(div);
+    });
+  }
+
+  function openSubject(subjectId){
+    nav = { subjectId, gradeId:null, unitId:null };
+    const subj = tree.subjectById[subjectId];
+    applyTheme(subj);
+    renderBreadcrumb(document.getElementById("crumbGrades"), [
+      { label:"🏠 الرئيسية", onClick:()=>{ resetTheme(); showScreen("home"); } },
+      { label: (subj.icon||"📘") + " " + subj.name }
+    ]);
+    document.getElementById("gradesTitle").textContent = (subj.icon||"📘") + " " + subj.name + " - اختر الصف";
+    buildGrades(subj);
+    showScreen("grades");
+  }
+
+  const gradeGrid = document.getElementById("gradeGrid");
+  function buildGrades(subj){
+    gradeGrid.innerHTML = "";
+    if(subj.grades.length === 0){
+      gradeGrid.innerHTML = `<div class="choice-card wide empty"><span class="emoji">📭</span><span class="name">لا توجد صفوف مضافة لهذه المادة بعد</span></div>`;
+      return;
+    }
+    subj.grades.forEach(grade=>{
+      const active = grade.units.some(u=>u.models && u.models.length>0);
+      const div = document.createElement("div");
+      div.className = "choice-card" + (active ? "" : " empty");
+      div.innerHTML = `<span class="emoji">🎒</span><span class="name">${grade.name}</span><span class="count">${active ? "اضغط للمتابعة" : "لا يوجد محتوى بعد"}</span>`;
+      if(active) div.addEventListener("click", ()=>{ playClick(); openGrade(subj.id, grade.id); });
+      gradeGrid.appendChild(div);
+    });
+  }
+
+  function openGrade(subjectId, gradeId){
+    nav.gradeId = gradeId; nav.unitId = null;
+    const subj = tree.subjectById[subjectId];
+    const grade = tree.gradeById[gradeId];
+    renderBreadcrumb(document.getElementById("crumbUnits"), [
+      { label:"🏠 الرئيسية", onClick:()=>{ resetTheme(); showScreen("home"); } },
+      { label:(subj.icon||"📘")+" "+subj.name, onClick:()=> openSubject(subjectId) },
+      { label: grade.name }
+    ]);
+    document.getElementById("unitsTitle").textContent = grade.name + " - اختر الوحدة";
+    buildUnits(subj, grade);
+    showScreen("units");
+  }
+
+  const unitGrid = document.getElementById("unitGrid");
+  function buildUnits(subj, grade){
+    unitGrid.innerHTML = "";
+    if(grade.units.length === 0){
+      unitGrid.innerHTML = `<div class="choice-card wide empty"><span class="emoji">📭</span><span class="name">لا توجد وحدات مضافة بعد</span></div>`;
+      return;
+    }
+    grade.units.forEach(unit=>{
+      const active = unit.models && unit.models.length>0;
+      const div = document.createElement("div");
+      div.className = "choice-card" + (active ? "" : " empty");
+      div.innerHTML = `<span class="emoji">${unit.icon||"📘"}</span><span class="name">${unit.name}</span><span class="count">${active ? unit.models.length + " نماذج اختبار" : "لا يوجد أسئلة بعد"}</span>`;
+      if(active) div.addEventListener("click", ()=>{ playClick(); openUnit(subj.id, grade.id, unit.id); });
+      unitGrid.appendChild(div);
+    });
+  }
+
+  function openUnit(subjectId, gradeId, unitId){
+    nav.unitId = unitId;
+    const subj = tree.subjectById[subjectId];
+    const grade = tree.gradeById[gradeId];
+    const unit = tree.unitById[unitId];
+    renderBreadcrumb(document.getElementById("crumbModels"), [
+      { label:"🏠 الرئيسية", onClick:()=>{ resetTheme(); showScreen("home"); } },
+      { label:(subj.icon||"📘")+" "+subj.name, onClick:()=> openSubject(subjectId) },
+      { label: grade.name, onClick:()=> openGrade(subjectId, gradeId) },
+      { label: unit.name }
+    ]);
+    document.getElementById("modelsTitle").textContent = unit.name + " - اختر النموذج";
+    buildModels(subj, grade, unit);
+    showScreen("models");
+  }
+
+  const modelGrid = document.getElementById("modelGrid");
+  let pendingModelId = null;
+  function buildModels(subj, grade, unit){
+    modelGrid.innerHTML = "";
+    unit.models.forEach(m=>{
+      const div = document.createElement("div");
+      div.className = "choice-card";
+      div.innerHTML = `<span class="emoji">${m.emoji||"📝"}</span><span class="name">${m.label}</span><span class="count">${m.questions.length} سؤال</span>`;
+      div.addEventListener("click", ()=>{ ensureAudio(); playClick(); openStory(unit, m.id); });
+      modelGrid.appendChild(div);
+    });
+    if(unit.models.length > 1){
+      const total = unit.models.reduce((sum,m)=>sum+m.questions.length,0);
+      const mix = document.createElement("div");
+      mix.className = "choice-card wide featured";
+      mix.innerHTML = `<span class="emoji">🏆</span><span class="name">التحدي الكبير - كل الأسئلة</span><span class="count">${total} سؤال من كل النماذج</span>`;
+      mix.addEventListener("click", ()=>{ ensureAudio(); playClick(); openStory(unit, "MIX"); });
+      modelGrid.appendChild(mix);
+    }
+  }
+
+  /* =========================================================
+     7) STORY
+     ========================================================= */
+  const storyTitle = document.getElementById("storyTitle");
+  const storyText = document.getElementById("storyText");
+  const studentNameInput = document.getElementById("studentNameInput");
+  const nameWarn = document.getElementById("nameWarn");
+  let pendingUnit = null;
+
+  function openStory(unit, modelKeyOrId){
+    pendingUnit = unit; pendingModelId = modelKeyOrId;
+    const subj = tree.subjectById[nav.subjectId];
+    const grade = tree.gradeById[nav.gradeId];
+    renderBreadcrumb(document.getElementById("crumbStory"), [
+      { label:"🏠 الرئيسية", onClick:()=>{ resetTheme(); showScreen("home"); } },
+      { label:(subj.icon||"📘")+" "+subj.name, onClick:()=> openSubject(nav.subjectId) },
+      { label: grade.name, onClick:()=> openGrade(nav.subjectId, nav.gradeId) },
+      { label: unit.name, onClick:()=> openUnit(nav.subjectId, nav.gradeId, nav.unitId) },
+      { label: modelKeyOrId==="MIX" ? "التحدي الكبير" : unit.models.find(m=>m.id===modelKeyOrId).label }
+    ]);
+    if(modelKeyOrId === "MIX"){
+      storyTitle.textContent = "🏆 التحدي الكبير";
+      storyText.style.whiteSpace = "pre-line";
+      storyText.textContent = unit.models.map(m=>m.story).filter(Boolean).join("\n\n");
+    } else {
+      const m = unit.models.find(mm=>mm.id===modelKeyOrId);
+      storyTitle.textContent = "📖 " + (m.story_title || m.label);
+      storyText.style.whiteSpace = "normal";
+      storyText.textContent = m.story || "";
+    }
+    studentNameInput.value = studentName;
+    nameWarn.style.display = "none";
+    showScreen("story");
+  }
+
+  document.getElementById("btnListen").addEventListener("click", ()=>{
+    ensureAudio(); playClick();
+    speak(storyText.textContent.replace(/\n/g," "));
+  });
+  document.getElementById("btnBackModels").addEventListener("click", ()=>{
+    playClick(); window.speechSynthesis && window.speechSynthesis.cancel();
+    openUnit(nav.subjectId, nav.gradeId, nav.unitId);
+  });
+  document.getElementById("btnStartQuiz").addEventListener("click", ()=>{
+    const val = studentNameInput.value.trim();
+    if(!val){ nameWarn.style.display="block"; studentNameInput.focus(); return; }
+    studentName = val;
+    playClick(); window.speechSynthesis && window.speechSynthesis.cancel();
+    startQuiz(pendingUnit, pendingModelId);
+  });
+
+  /* =========================================================
+     8) QUIZ
+     ========================================================= */
+  const progressFill = document.getElementById("progressFill");
+  const scoreChip = document.getElementById("scoreChip");
+  const typeChip = document.getElementById("typeChip");
+  const qCounter = document.getElementById("qCounter");
+  const streakChip = document.getElementById("streakChip");
+  const questionBox = document.getElementById("questionBox");
+  const optionsGrid = document.getElementById("optionsGrid");
+  const feedbackBox = document.getElementById("feedbackBox");
+  const nextWrap = document.getElementById("nextWrap");
+  const mascotQuiz = document.getElementById("mascotQuiz");
+  let activeUnit = null, activeModelKey = null;
+
+  function startQuiz(unit, modelKeyOrId){
+    activeUnit = unit; activeModelKey = modelKeyOrId;
+    let questions;
+    if(modelKeyOrId === "MIX"){
+      questions = shuffle(unit.models.flatMap(m => m.questions.map(q=>({...q, _bank:m.word_bank||[]}))));
+    } else {
+      const m = unit.models.find(mm=>mm.id===modelKeyOrId);
+      questions = m.questions.map(q=>({...q, _bank:m.word_bank||[]}));
+    }
+    quizState = { modelId:modelKeyOrId, questions, index:0, score:0, streak:0, answered:false, nextTimer:null };
+    showScreen("quiz");
+    renderQuestion();
+  }
+
+  function renderQuestion(){
+    clearTimeout(quizState.nextTimer);
+    quizState.answered = false;
+    const q = quizState.questions[quizState.index];
+    const pct = Math.round((quizState.index / quizState.questions.length) * 100);
+    progressFill.style.width = pct + "%";
+    qCounter.textContent = "سؤال " + (quizState.index+1) + " من " + quizState.questions.length;
+    scoreChip.textContent = "⭐ " + quizState.score;
+    typeChip.textContent = TYPE_LABELS[q.q_type] || "📝 سؤال";
+    if(quizState.streak >= 3){ streakChip.style.display="inline-block"; streakChip.textContent = "🔥 " + quizState.streak + " متتالية"; }
+    else streakChip.style.display = "none";
+
+    setMascotFace(mascotQuiz, "happy");
+    questionBox.innerHTML = q.prompt.replace("___", '<span class="blank">_____</span>');
+    feedbackBox.className = "feedback-box"; feedbackBox.innerHTML = "";
+    nextWrap.style.display = "none";
+
+    optionsGrid.innerHTML = "";
+    let optionTexts, correctIndex;
+    if(q.q_type === "fill"){ optionTexts = q._bank; correctIndex = q.correct_index; optionsGrid.className = "options-grid chips"; }
+    else if(q.q_type === "tf"){ optionTexts = q.options; correctIndex = q.correct_index; optionsGrid.className = "options-grid grid-2"; }
+    else { optionTexts = q.options; correctIndex = q.correct_index; optionsGrid.className = "options-grid grid-2x2"; }
+
+    const letters = ["a","b","c","d","e"];
+    optionTexts.forEach((text, idx)=>{
+      const btn = document.createElement("button");
+      btn.className = "opt-btn" + (q.q_type === "fill" ? " chip" : "");
+      btn.innerHTML = q.q_type === "mcq" ? `<span class="letter">${letters[idx]}</span>${text}` : text;
+      btn.addEventListener("click", ()=> selectAnswer(idx, correctIndex, btn));
+      optionsGrid.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(chosenIdx, correctIdx, btnEl){
+    if(quizState.answered) return;
+    quizState.answered = true;
+    ensureAudio();
+    const allBtns = optionsGrid.querySelectorAll(".opt-btn");
+    allBtns.forEach(b=>b.classList.add("locked"));
+    const isCorrect = chosenIdx === correctIdx;
+
+    if(isCorrect){
+      btnEl.classList.add("correct");
+      quizState.score++; quizState.streak++;
+      playCorrect(); bounceMascot(mascotQuiz); setMascotFace(mascotQuiz,"happy");
+      feedbackBox.className = "feedback-box show ok";
+      feedbackBox.innerHTML = pickCorrectPhrase();
+    } else {
+      btnEl.classList.add("wrong");
+      allBtns[correctIdx].classList.add("correct");
+      quizState.streak = 0;
+      playWrong(); shakeMascot(mascotQuiz); setMascotFace(mascotQuiz,"sad");
+      const correctText = allBtns[correctIdx].textContent;
+      feedbackBox.className = "feedback-box show no";
+      feedbackBox.innerHTML = pickWrongPhrase(correctText);
+    }
+    allBtns.forEach((b,i)=>{ if(i!==chosenIdx && i!==correctIdx) b.classList.add("dim"); });
+    scoreChip.textContent = "⭐ " + quizState.score;
+    nextWrap.style.display = "block";
+    quizState.nextTimer = setTimeout(()=>{ goNext(); }, 2200);
+  }
+
+  const CORRECT_PHRASES = ["🎉 رائع! إجابة صحيحة","👏 ممتاز! أحسنت","🌟 برافو عليك!","✅ صحيح! أنت بطل"];
+  function pickCorrectPhrase(){ return CORRECT_PHRASES[Math.floor(Math.random()*CORRECT_PHRASES.length)]; }
+  function pickWrongPhrase(correctText){ return `💡 لا بأس، حاول مجدداً! الإجابة الصحيحة: <span style="direction:ltr;display:inline-block;">${correctText}</span>`; }
+
+  document.getElementById("btnNext").addEventListener("click", ()=>{ playClick(); goNext(); });
+  document.getElementById("btnQuitQuiz").addEventListener("click", ()=>{
+    playClick(); clearTimeout(quizState.nextTimer);
+    openUnit(nav.subjectId, nav.gradeId, nav.unitId);
+  });
+
+  function goNext(){
+    clearTimeout(quizState.nextTimer);
+    quizState.index++;
+    if(quizState.index >= quizState.questions.length) finishQuiz();
+    else renderQuestion();
+  }
+
+  /* =========================================================
+     9) RESULT + save attempt to Supabase
+     ========================================================= */
+  const resultModelLabel = document.getElementById("resultModelLabel");
+  const scoreBig = document.getElementById("scoreBig");
+  const badgeText = document.getElementById("badgeText");
+  const encourageText = document.getElementById("encourageText");
+  const starEls = [document.getElementById("star1"), document.getElementById("star2"), document.getElementById("star3")];
+  const mascotResult = document.getElementById("mascotResult");
+
+  async function finishQuiz(){
+    progressFill.style.width = "100%";
+    const total = quizState.questions.length;
+    const pct = Math.round((quizState.score/total)*100);
+    let stars = 0;
+    if(pct>=90) stars=3; else if(pct>=70) stars=2; else if(pct>=50) stars=1;
+
+    let badge, encourage, mascotFace;
+    if(pct>=90){ badge="🏅 نجم القراءة الذهبي"; encourage="أداء مذهل! أنت تتقن هذه الوحدة تماماً 🎊"; mascotFace="happy"; }
+    else if(pct>=70){ badge="🥈 بطل صاعد"; encourage="أحسنت! بقليل من المراجعة ستصبح نجماً ذهبياً ✨"; mascotFace="happy"; }
+    else if(pct>=50){ badge="🌱 نجم مبتدئ"; encourage="بداية جيدة! راجع القصة والكلمات وحاول مرة أخرى 💪"; mascotFace="sad"; }
+    else { badge="📚 استمر بالتدريب"; encourage="لا تقلق، كل خبير كان مبتدئاً يوماً ما. جرّب مرة أخرى! 🌈"; mascotFace="sad"; }
+
+    const subj = tree.subjectById[nav.subjectId];
+    const grade = tree.gradeById[nav.gradeId];
+    const unit = activeUnit;
+    const modelLabel = activeModelKey==="MIX" ? "التحدي الكبير" : unit.models.find(m=>m.id===activeModelKey).label;
+
+    resultModelLabel.textContent = subj.name + " - " + grade.name + " - " + unit.name + " - " + modelLabel;
+    scoreBig.innerHTML = quizState.score + ' <span>/ ' + total + '</span>';
+    badgeText.textContent = badge;
+    encourageText.textContent = encourage;
+    setMascotFace(mascotResult, mascotFace);
+    showScreen("result");
+
+    starEls.forEach(s=>s.classList.remove("on"));
+    for(let i=0;i<stars;i++){ setTimeout(()=>{ starEls[i].classList.add("on"); playClick(); }, 300+i*260); }
+    if(stars>=2){ setTimeout(()=>{ playFanfare(); burstConfetti(); }, 300+stars*260); }
+    else if(stars===0 && pct<50){ setTimeout(()=>{ playWrong(); }, 300); }
+
+    try{
+      await supabase.from("attempts").insert({
+        student_name: studentName,
+        subject_key: subj.key, subject_name: subj.name,
+        grade_key: grade.key, grade_name: grade.name,
+        unit_key: unit.key, unit_name: unit.name,
+        model_key: activeModelKey==="MIX" ? "MIX" : unit.models.find(m=>m.id===activeModelKey).key,
+        model_label: modelLabel,
+        score: quizState.score, total: total, percentage: pct
+      });
+    }catch(e){ console.warn("تعذر حفظ النتيجة:", e); }
+  }
+
+  function burstConfetti(){
+    const colors = ["#06B6A4","#FF8A5B","#FF5D8F","#8B6FE0","#FFC94D","#2FBE6C"];
+    for(let i=0;i<70;i++){
+      const piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.left = Math.random()*100 + "vw";
+      const duration = 2.2 + Math.random()*1.6, delay = Math.random()*0.4;
+      piece.style.animation = `confettiFall ${duration}s ease-in ${delay}s forwards`;
+      piece.style.transform = `rotate(${Math.random()*360}deg)`;
+      if(Math.random()>0.5) piece.style.borderRadius = "50%";
+      document.body.appendChild(piece);
+      setTimeout(()=>piece.remove(), (duration+delay)*1000+200);
+    }
+  }
+
+  document.getElementById("btnRetry").addEventListener("click", ()=>{ playClick(); startQuiz(activeUnit, activeModelKey); });
+  document.getElementById("btnAnotherUnit").addEventListener("click", ()=>{ playClick(); openUnit(nav.subjectId, nav.gradeId, nav.unitId); });
+  document.getElementById("btnHome").addEventListener("click", ()=>{ playClick(); resetTheme(); showScreen("home"); });
+
+  /* =========================================================
+     10) ADMIN PANEL
+     ========================================================= */
+  const btnAdminEnter = document.getElementById("btnAdminEnter");
+  const btnAdminExit = document.getElementById("btnAdminExit");
+  const tabContent = document.getElementById("tabContent");
+  const tabScores = document.getElementById("tabScores");
+  const adminContentPane = document.getElementById("adminContentPane");
+  const adminScoresPane = document.getElementById("adminScoresPane");
+
+  btnAdminEnter.addEventListener("click", ()=>{
+    const pass = prompt("🔐 اكتب كلمة سر لوحة المعلم:");
+    if(pass === null) return;
+    if(pass !== ADMIN_PASSCODE){ alert("كلمة السر غير صحيحة ❌"); return; }
+    resetTheme();
+    showScreen("admin");
+    renderAdminContent();
+  });
+  btnAdminExit.addEventListener("click", ()=>{ showScreen("home"); buildHome(); });
+  tabContent.addEventListener("click", ()=>{
+    tabContent.classList.add("active"); tabScores.classList.remove("active");
+    adminContentPane.style.display=""; adminScoresPane.style.display="none";
+    renderAdminContent();
+  });
+  tabScores.addEventListener("click", ()=>{
+    tabScores.classList.add("active"); tabContent.classList.remove("active");
+    adminScoresPane.style.display=""; adminContentPane.style.display="none";
+    renderAdminScores();
+  });
+
+  /* ---- admin state (which item currently selected in each cascading dropdown) ---- */
+  let adminSel = { subjectId:"", gradeId:"", unitId:"", modelId:"" };
+
+  function el(tag, className, html){
+    const e = document.createElement(tag);
+    if(className) e.className = className;
+    if(html !== undefined) e.innerHTML = html;
+    return e;
+  }
+
+  function renderAdminContent(){
+    adminContentPane.innerHTML = "";
+
+    // ---- Subject select/create ----
+    const subjSection = el("div","admin-section");
+    subjSection.appendChild(el("h3", null, "1️⃣ المادة"));
+    const subjRow = el("div","field-row");
+    const subjField = el("div","field");
+    subjField.appendChild(el("label", null, "اختر مادة موجودة أو أضف جديدة"));
+    const subjSelect = document.createElement("select");
+    subjSelect.appendChild(new Option("➕ مادة جديدة...", ""));
+    tree.subjects.forEach(s=> subjSelect.appendChild(new Option((s.icon||"📘")+" "+s.name, s.id)));
+    subjSelect.value = adminSel.subjectId;
+    subjSelect.addEventListener("change", ()=>{
+      adminSel = { subjectId: subjSelect.value, gradeId:"", unitId:"", modelId:"" };
+      renderAdminContent();
+    });
+    subjField.appendChild(subjSelect);
+    subjRow.appendChild(subjField);
+    subjSection.appendChild(subjRow);
+    subjSection.appendChild(buildSubjectForm(adminSel.subjectId ? tree.subjectById[adminSel.subjectId] : null));
+    adminContentPane.appendChild(subjSection);
+
+    if(!adminSel.subjectId){ return; }
+    const subj = tree.subjectById[adminSel.subjectId];
+
+    // ---- Grade select/create ----
+    const gradeSection = el("div","admin-section");
+    gradeSection.appendChild(el("h3", null, "2️⃣ الصف الدراسي"));
+    const gradeField = el("div","field");
+    gradeField.appendChild(el("label", null, "اختر صف موجود أو أضف جديد"));
+    const gradeSelect = document.createElement("select");
+    gradeSelect.appendChild(new Option("➕ صف جديد...", ""));
+    subj.grades.forEach(g=> gradeSelect.appendChild(new Option(g.name, g.id)));
+    gradeSelect.value = adminSel.gradeId;
+    gradeSelect.addEventListener("change", ()=>{
+      adminSel.gradeId = gradeSelect.value; adminSel.unitId=""; adminSel.modelId="";
+      renderAdminContent();
+    });
+    gradeField.appendChild(gradeSelect);
+    gradeSection.appendChild(gradeField);
+    gradeSection.appendChild(buildGradeForm(subj, adminSel.gradeId ? tree.gradeById[adminSel.gradeId] : null));
+    adminContentPane.appendChild(gradeSection);
+
+    if(!adminSel.gradeId){ return; }
+    const grade = tree.gradeById[adminSel.gradeId];
+
+    // ---- Unit select/create ----
+    const unitSection = el("div","admin-section");
+    unitSection.appendChild(el("h3", null, "3️⃣ الوحدة"));
+    const unitField = el("div","field");
+    unitField.appendChild(el("label", null, "اختر وحدة موجودة أو أضف جديدة"));
+    const unitSelect = document.createElement("select");
+    unitSelect.appendChild(new Option("➕ وحدة جديدة...", ""));
+    grade.units.forEach(u=> unitSelect.appendChild(new Option(u.name, u.id)));
+    unitSelect.value = adminSel.unitId;
+    unitSelect.addEventListener("change", ()=>{
+      adminSel.unitId = unitSelect.value; adminSel.modelId="";
+      renderAdminContent();
+    });
+    unitField.appendChild(unitSelect);
+    unitSection.appendChild(unitField);
+    unitSection.appendChild(buildUnitForm(grade, adminSel.unitId ? tree.unitById[adminSel.unitId] : null));
+    adminContentPane.appendChild(unitSection);
+
+    if(!adminSel.unitId){ return; }
+    const unit = tree.unitById[adminSel.unitId];
+
+    // ---- Model select/create ----
+    const modelSection = el("div","admin-section");
+    modelSection.appendChild(el("h3", null, "4️⃣ نموذج الاختبار (يحتوي القصة وبنك الكلمات)"));
+    const modelField = el("div","field");
+    modelField.appendChild(el("label", null, "اختر نموذج موجود أو أضف جديد"));
+    const modelSelect = document.createElement("select");
+    modelSelect.appendChild(new Option("➕ نموذج جديد...", ""));
+    unit.models.forEach(m=> modelSelect.appendChild(new Option(m.label, m.id)));
+    modelSelect.value = adminSel.modelId;
+    modelSelect.addEventListener("change", ()=>{ adminSel.modelId = modelSelect.value; renderAdminContent(); });
+    modelField.appendChild(modelSelect);
+    modelSection.appendChild(modelField);
+    modelSection.appendChild(buildModelForm(unit, adminSel.modelId ? tree.modelById[adminSel.modelId] : null));
+    adminContentPane.appendChild(modelSection);
+
+    if(!adminSel.modelId){ return; }
+    const model = tree.modelById[adminSel.modelId];
+
+    // ---- Questions management ----
+    const qSection = el("div","admin-section");
+    qSection.appendChild(el("h3", null, "5️⃣ أسئلة " + model.label + " (" + model.questions.length + " سؤال)"));
+    qSection.appendChild(buildQuestionsTable(model));
+    qSection.appendChild(el("div", null, "").parentElement || document.createTextNode(""));
+    const addQBtn = el("button","btn btn-primary btn-sm","➕ إضافة سؤال جديد");
+    addQBtn.addEventListener("click", ()=>{
+      const form = buildQuestionForm(model, null);
+      qSection.appendChild(form);
+      addQBtn.style.display = "none";
+    });
+    qSection.appendChild(addQBtn);
+    adminContentPane.appendChild(qSection);
+  }
+
+  /* ---------- Subject form ---------- */
+  function buildSubjectForm(existing){
+    const wrap = el("div");
+    const row1 = el("div","field-row");
+    const nameField = el("div","field"); nameField.appendChild(el("label",null,"اسم المادة")); 
+    const nameInput = document.createElement("input"); nameInput.type="text"; nameInput.value = existing ? existing.name : "";
+    nameInput.placeholder = "مثال: الرياضيات";
+    nameField.appendChild(nameInput); row1.appendChild(nameField);
+
+    const iconField = el("div","field"); iconField.style.maxWidth="90px";
+    iconField.appendChild(el("label",null,"إيموجي"));
+    const iconInput = document.createElement("input"); iconInput.type="text"; iconInput.value = existing ? (existing.icon||"📘") : "📘";
+    iconField.appendChild(iconInput); row1.appendChild(iconField);
+    wrap.appendChild(row1);
+
+    const row2 = el("div","field-row");
+    const colors = [
+      ["اللون الأساسي","theme_primary", existing?existing.theme_primary:"#06B6A4"],
+      ["الأساسي الغامق","theme_primary_dark", existing?existing.theme_primary_dark:"#048C7F"],
+      ["لون التمييز","theme_accent", existing?existing.theme_accent:"#FF8A5B"],
+      ["التمييز الغامق","theme_accent_dark", existing?existing.theme_accent_dark:"#E96A3A"]
+    ];
+    const colorInputs = {};
+    colors.forEach(([label,key,val])=>{
+      const f = el("div","field"); f.style.maxWidth="90px";
+      f.appendChild(el("label",null,label));
+      const inp = document.createElement("input"); inp.type="color"; inp.value = val;
+      colorInputs[key] = inp;
+      f.appendChild(inp); row2.appendChild(f);
+    });
+    wrap.appendChild(row2);
+
+    const actions = el("div","form-actions");
+    const saveBtn = el("button","btn btn-primary btn-sm", existing ? "💾 حفظ التعديلات" : "✅ إنشاء المادة");
+    saveBtn.addEventListener("click", async ()=>{
+      const payload = {
+        name: nameInput.value.trim(), icon: iconInput.value.trim() || "📘",
+        theme_primary: colorInputs.theme_primary.value, theme_primary_dark: colorInputs.theme_primary_dark.value,
+        theme_accent: colorInputs.theme_accent.value, theme_accent_dark: colorInputs.theme_accent_dark.value
+      };
+      if(!payload.name){ alert("اكتب اسم المادة أولاً"); return; }
+      try{
+        if(existing){ await supabase.from("subjects").update(payload).eq("id", existing.id); }
+        else{
+          payload.key = genKey(); payload.sort_order = tree.subjects.length+1;
+          const {data,error} = await supabase.from("subjects").insert(payload).select().single();
+          if(error) throw error;
+          await reloadTree(); adminSel = { subjectId:data.id, gradeId:"", unitId:"", modelId:"" };
+          renderAdminContent(); buildHome(); return;
+        }
+        await reloadTree(); renderAdminContent(); buildHome();
+      }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+    });
+    actions.appendChild(saveBtn);
+    if(existing){
+      const delBtn = el("button","btn btn-danger btn-sm","🗑 حذف المادة بكل محتواها");
+      delBtn.addEventListener("click", async ()=>{
+        if(!confirm("متأكد؟ هيتم حذف كل الصفوف والوحدات والأسئلة التابعة لهذه المادة!")) return;
+        try{
+          await supabase.from("subjects").delete().eq("id", existing.id);
+          await reloadTree(); adminSel = { subjectId:"", gradeId:"", unitId:"", modelId:"" };
+          renderAdminContent(); buildHome();
+        }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+      });
+      actions.appendChild(delBtn);
+    }
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  /* ---------- Grade form ---------- */
+  function buildGradeForm(subj, existing){
+    const wrap = el("div");
+    const row = el("div","field-row");
+    const nameField = el("div","field"); nameField.appendChild(el("label",null,"اسم الصف"));
+    const nameInput = document.createElement("input"); nameInput.type="text"; nameInput.value = existing ? existing.name : "";
+    nameInput.placeholder = "مثال: الصف الخامس الابتدائي";
+    nameField.appendChild(nameInput); row.appendChild(nameField);
+    wrap.appendChild(row);
+
+    const actions = el("div","form-actions");
+    const saveBtn = el("button","btn btn-primary btn-sm", existing ? "💾 حفظ التعديلات" : "✅ إنشاء الصف");
+    saveBtn.addEventListener("click", async ()=>{
+      const name = nameInput.value.trim();
+      if(!name){ alert("اكتب اسم الصف أولاً"); return; }
+      try{
+        if(existing){ await supabase.from("grades").update({name}).eq("id", existing.id); }
+        else{
+          const {data,error} = await supabase.from("grades").insert({
+            subject_id: subj.id, key: genKey(), name, sort_order: subj.grades.length+1
+          }).select().single();
+          if(error) throw error;
+          await reloadTree(); adminSel.gradeId = data.id; adminSel.unitId=""; adminSel.modelId="";
+          renderAdminContent(); buildHome(); return;
+        }
+        await reloadTree(); renderAdminContent(); buildHome();
+      }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+    });
+    actions.appendChild(saveBtn);
+    if(existing){
+      const delBtn = el("button","btn btn-danger btn-sm","🗑 حذف الصف");
+      delBtn.addEventListener("click", async ()=>{
+        if(!confirm("متأكد؟ هيتم حذف كل الوحدات والأسئلة التابعة لهذا الصف!")) return;
+        try{
+          await supabase.from("grades").delete().eq("id", existing.id);
+          await reloadTree(); adminSel.gradeId=""; adminSel.unitId=""; adminSel.modelId="";
+          renderAdminContent(); buildHome();
+        }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+      });
+      actions.appendChild(delBtn);
+    }
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  /* ---------- Unit form ---------- */
+  function buildUnitForm(grade, existing){
+    const wrap = el("div");
+    const row = el("div","field-row");
+    const nameField = el("div","field"); nameField.appendChild(el("label",null,"اسم الوحدة"));
+    const nameInput = document.createElement("input"); nameInput.type="text"; nameInput.value = existing ? existing.name : "";
+    nameInput.placeholder = "مثال: الوحدة الثانية"; nameField.appendChild(nameInput); row.appendChild(nameField);
+
+    const iconField = el("div","field"); iconField.style.maxWidth="90px";
+    iconField.appendChild(el("label",null,"إيموجي"));
+    const iconInput = document.createElement("input"); iconInput.type="text"; iconInput.value = existing ? (existing.icon||"📘") : "📘";
+    iconField.appendChild(iconInput); row.appendChild(iconField);
+    wrap.appendChild(row);
+
+    const actions = el("div","form-actions");
+    const saveBtn = el("button","btn btn-primary btn-sm", existing ? "💾 حفظ التعديلات" : "✅ إنشاء الوحدة");
+    saveBtn.addEventListener("click", async ()=>{
+      const name = nameInput.value.trim();
+      if(!name){ alert("اكتب اسم الوحدة أولاً"); return; }
+      const icon = iconInput.value.trim() || "📘";
+      try{
+        if(existing){ await supabase.from("units").update({name, icon}).eq("id", existing.id); }
+        else{
+          const {data,error} = await supabase.from("units").insert({
+            grade_id: grade.id, key: genKey(), name, icon, sort_order: grade.units.length+1
+          }).select().single();
+          if(error) throw error;
+          await reloadTree(); adminSel.unitId = data.id; adminSel.modelId="";
+          renderAdminContent(); buildHome(); return;
+        }
+        await reloadTree(); renderAdminContent(); buildHome();
+      }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+    });
+    actions.appendChild(saveBtn);
+    if(existing){
+      const delBtn = el("button","btn btn-danger btn-sm","🗑 حذف الوحدة");
+      delBtn.addEventListener("click", async ()=>{
+        if(!confirm("متأكد؟ هيتم حذف كل النماذج والأسئلة التابعة لهذه الوحدة!")) return;
+        try{
+          await supabase.from("units").delete().eq("id", existing.id);
+          await reloadTree(); adminSel.unitId=""; adminSel.modelId="";
+          renderAdminContent(); buildHome();
+        }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+      });
+      actions.appendChild(delBtn);
+    }
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  /* ---------- Model form ---------- */
+  function buildModelForm(unit, existing){
+    const wrap = el("div");
+    const row1 = el("div","field-row");
+    const labelField = el("div","field"); labelField.appendChild(el("label",null,"اسم النموذج"));
+    const labelInput = document.createElement("input"); labelInput.type="text"; labelInput.value = existing?existing.label:"";
+    labelInput.placeholder = "مثال: النموذج A"; labelField.appendChild(labelInput); row1.appendChild(labelField);
+
+    const emojiField = el("div","field"); emojiField.style.maxWidth="90px"; emojiField.appendChild(el("label",null,"إيموجي"));
+    const emojiInput = document.createElement("input"); emojiInput.type="text"; emojiInput.value = existing?(existing.emoji||"📝"):"📝";
+    emojiField.appendChild(emojiInput); row1.appendChild(emojiField);
+    wrap.appendChild(row1);
+
+    const row2 = el("div","field-row");
+    const storyTitleField = el("div","field"); storyTitleField.appendChild(el("label",null,"عنوان القصة (اختياري)"));
+    const storyTitleInput = document.createElement("input"); storyTitleInput.type="text"; storyTitleInput.value = existing?(existing.story_title||""):"";
+    storyTitleField.appendChild(storyTitleInput); row2.appendChild(storyTitleField);
+    wrap.appendChild(row2);
+
+    const storyField = el("div","field"); storyField.appendChild(el("label",null,"نص القصة بالإنجليزي (يُقرأ صوتياً للطالب)"));
+    const storyTextarea = document.createElement("textarea"); storyTextarea.value = existing?(existing.story||""):"";
+    storyField.appendChild(storyTextarea); wrap.appendChild(storyField);
+
+    const bankField = el("div","field"); bankField.appendChild(el("label",null,"بنك الكلمات لأسئلة إكمال الجملة (افصل بينهم بفاصلة ,)"));
+    const bankInput = document.createElement("input"); bankInput.type="text";
+    bankInput.value = existing && existing.word_bank ? existing.word_bank.join(", ") : "";
+    bankInput.placeholder = "مثال: healthy, water, sleep, food";
+    bankField.appendChild(bankInput);
+    bankField.appendChild(el("div","hint","الكلمات دي هتظهر كخيارات لأسئلة نوع 'أكمل الجملة'"));
+    wrap.appendChild(bankField);
+
+    const actions = el("div","form-actions");
+    const saveBtn = el("button","btn btn-primary btn-sm", existing ? "💾 حفظ التعديلات" : "✅ إنشاء النموذج");
+    saveBtn.addEventListener("click", async ()=>{
+      const label = labelInput.value.trim();
+      if(!label){ alert("اكتب اسم النموذج أولاً"); return; }
+      const payload = {
+        label, emoji: emojiInput.value.trim()||"📝",
+        story_title: storyTitleInput.value.trim(),
+        story: storyTextarea.value.trim(),
+        word_bank: bankInput.value.split(",").map(w=>w.trim()).filter(Boolean)
+      };
+      try{
+        if(existing){ await supabase.from("models").update(payload).eq("id", existing.id); }
+        else{
+          payload.unit_id = unit.id; payload.key = genKey(); payload.sort_order = unit.models.length+1;
+          const {data,error} = await supabase.from("models").insert(payload).select().single();
+          if(error) throw error;
+          await reloadTree(); adminSel.modelId = data.id;
+          renderAdminContent(); buildHome(); return;
+        }
+        await reloadTree(); renderAdminContent(); buildHome();
+      }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+    });
+    actions.appendChild(saveBtn);
+    if(existing){
+      const delBtn = el("button","btn btn-danger btn-sm","🗑 حذف النموذج بأسئلته");
+      delBtn.addEventListener("click", async ()=>{
+        if(!confirm("متأكد؟ هيتم حذف كل أسئلة هذا النموذج!")) return;
+        try{
+          await supabase.from("models").delete().eq("id", existing.id);
+          await reloadTree(); adminSel.modelId="";
+          renderAdminContent(); buildHome();
+        }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+      });
+      actions.appendChild(delBtn);
+    }
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  /* ---------- Questions table ---------- */
+  function buildQuestionsTable(model){
+    if(model.questions.length === 0){
+      return el("p","hint","لا توجد أسئلة في هذا النموذج بعد.");
+    }
+    const table = document.createElement("table");
+    table.className = "admin-table";
+    table.innerHTML = "<thead><tr><th>#</th><th>النوع</th><th>السؤال</th><th>الإجابة الصحيحة</th><th></th></tr></thead>";
+    const tbody = document.createElement("tbody");
+    model.questions.forEach((q, idx)=>{
+      const tr = document.createElement("tr");
+      const typeIcon = q.q_type==="tf" ? "📖 صح/خطأ" : q.q_type==="mcq" ? "📝 اختيار" : "🧩 إكمال";
+      let correctText = "";
+      if(q.q_type === "fill"){ correctText = (model.word_bank||[])[q.correct_index] || "—"; }
+      else { correctText = (q.options||[])[q.correct_index] || "—"; }
+      tr.innerHTML = `<td>${idx+1}</td><td>${typeIcon}</td><td style="direction:ltr;text-align:left;max-width:220px;">${escapeHtml(q.prompt)}</td><td style="direction:ltr;text-align:left;">${escapeHtml(correctText)}</td>`;
+      const tdActions = document.createElement("td");
+      tdActions.className = "actions";
+      const editBtn = el("button","icon-btn","✏️");
+      editBtn.title = "تعديل";
+      editBtn.addEventListener("click", ()=>{
+        const existingForm = tr.parentElement.parentElement.querySelector(".q-edit-form");
+        if(existingForm) existingForm.remove();
+        const form = buildQuestionForm(model, q);
+        form.classList.add("q-edit-form");
+        tr.parentElement.parentElement.parentElement.appendChild(form);
+      });
+      const delBtn = el("button","icon-btn","🗑");
+      delBtn.title = "حذف";
+      delBtn.addEventListener("click", async ()=>{
+        if(!confirm("متأكد إنك عاوز تحذف السؤال ده؟")) return;
+        try{
+          await supabase.from("questions").delete().eq("id", q.id);
+          await reloadTree(); renderAdminContent();
+        }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+      });
+      tdActions.appendChild(editBtn); tdActions.appendChild(delBtn);
+      tr.appendChild(tdActions);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    return table;
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement("div"); d.textContent = str||""; return d.innerHTML;
+  }
+
+  /* ---------- Question add/edit form ---------- */
+  function buildQuestionForm(model, existing){
+    const wrap = el("div","admin-section");
+    wrap.style.background = "#fff";
+    wrap.appendChild(el("h3", null, existing ? "✏️ تعديل السؤال" : "➕ سؤال جديد"));
+
+    const typeField = el("div","field");
+    typeField.appendChild(el("label",null,"نوع السؤال"));
+    const typeSelect = document.createElement("select");
+    [["tf","📖 صح / خطأ"],["mcq","📝 اختيار من متعدد"],["fill","🧩 إكمال الجملة (من بنك الكلمات)"]].forEach(([v,l])=>{
+      typeSelect.appendChild(new Option(l, v));
+    });
+    typeSelect.value = existing ? existing.q_type : "mcq";
+    typeField.appendChild(typeSelect);
+    wrap.appendChild(typeField);
+
+    const promptField = el("div","field");
+    promptField.appendChild(el("label",null,"نص السؤال (استخدم ___ لمكان الفراغ لو محتاج)"));
+    const promptInput = document.createElement("textarea");
+    promptInput.style.direction = "ltr"; promptInput.style.textAlign="left";
+    promptInput.value = existing ? existing.prompt : "";
+    promptField.appendChild(promptInput);
+    wrap.appendChild(promptField);
+
+    const dynamicArea = el("div");
+    wrap.appendChild(dynamicArea);
+
+    function renderDynamic(){
+      dynamicArea.innerHTML = "";
+      const type = typeSelect.value;
+      if(type === "tf"){
+        dynamicArea.appendChild(el("p","hint","الخيارات ثابتة: ✅ True / ❌ False"));
+        const radioRow = el("div","radio-row");
+        [["✅ True",0],["❌ False",1]].forEach(([label,val])=>{
+          const lab = document.createElement("label");
+          const radio = document.createElement("input"); radio.type="radio"; radio.name="tfCorrect"; radio.value=val;
+          if(existing && existing.q_type==="tf" && existing.correct_index===val) radio.checked = true;
+          if(!existing && val===0) radio.checked = true;
+          lab.appendChild(radio); lab.appendChild(document.createTextNode(" "+label));
+          radioRow.appendChild(lab);
+        });
+        dynamicArea.appendChild(radioRow);
+      } else if(type === "mcq"){
+        const optsWrap = el("div");
+        const letters = ["a","b","c","d"];
+        const inputs = [];
+        letters.forEach((L,i)=>{
+          const f = el("div","field");
+          f.appendChild(el("label",null,"الخيار "+L.toUpperCase()));
+          const inp = document.createElement("input"); inp.type="text"; inp.style.direction="ltr"; inp.style.textAlign="left";
+          inp.value = existing && existing.q_type==="mcq" && existing.options ? (existing.options[i]||"") : "";
+          inputs.push(inp);
+          f.appendChild(inp);
+          optsWrap.appendChild(f);
+        });
+        dynamicArea.appendChild(optsWrap);
+        const radioRow = el("div","radio-row");
+        letters.forEach((L,i)=>{
+          const lab = document.createElement("label");
+          const radio = document.createElement("input"); radio.type="radio"; radio.name="mcqCorrect"; radio.value=i;
+          if(existing && existing.q_type==="mcq" && existing.correct_index===i) radio.checked=true;
+          if(!existing && i===0) radio.checked = true;
+          lab.appendChild(radio); lab.appendChild(document.createTextNode(" الإجابة الصحيحة: "+L.toUpperCase()));
+          radioRow.appendChild(lab);
+        });
+        dynamicArea.appendChild(radioRow);
+        dynamicArea._mcqInputs = inputs;
+      } else { // fill
+        const bank = model.word_bank || [];
+        if(bank.length === 0){
+          dynamicArea.appendChild(el("p","hint","⚠️ لازم تضيف بنك كلمات للنموذج أولاً (في فورم النموذج فوق) قبل ما تضيف سؤال إكمال."));
+        } else {
+          dynamicArea.appendChild(el("p","hint","اختر الكلمة الصحيحة من بنك كلمات النموذج:"));
+          const chipsWrap = el("div","chips-pick");
+          bank.forEach((word, i)=>{
+            const chip = el("button","chip-pick", word);
+            chip.type = "button";
+            if(existing && existing.q_type==="fill" && existing.correct_index===i) chip.classList.add("selected");
+            if(!existing && i===0) chip.classList.add("selected");
+            chip.addEventListener("click", ()=>{
+              chipsWrap.querySelectorAll(".chip-pick").forEach(c=>c.classList.remove("selected"));
+              chip.classList.add("selected");
+            });
+            chipsWrap.appendChild(chip);
+          });
+          dynamicArea.appendChild(chipsWrap);
+          dynamicArea._chipsWrap = chipsWrap;
+        }
+      }
+    }
+    renderDynamic();
+    typeSelect.addEventListener("change", renderDynamic);
+
+    const actions = el("div","form-actions");
+    const saveBtn = el("button","btn btn-primary btn-sm", existing ? "💾 حفظ التعديلات" : "✅ إضافة السؤال");
+    saveBtn.addEventListener("click", async ()=>{
+      const prompt_ = promptInput.value.trim();
+      if(!prompt_){ alert("اكتب نص السؤال أولاً"); return; }
+      const type = typeSelect.value;
+      let payload = { q_type:type, prompt:prompt_ };
+      if(type === "tf"){
+        const checked = dynamicArea.querySelector('input[name="tfCorrect"]:checked');
+        payload.options = ["✅ True","❌ False"];
+        payload.correct_index = checked ? parseInt(checked.value,10) : 0;
+      } else if(type === "mcq"){
+        const inputs = dynamicArea._mcqInputs;
+        const opts = inputs.map(i=>i.value.trim());
+        if(opts.some(o=>!o)){ alert("املأ كل الخيارات الأربعة"); return; }
+        const checked = dynamicArea.querySelector('input[name="mcqCorrect"]:checked');
+        payload.options = opts;
+        payload.correct_index = checked ? parseInt(checked.value,10) : 0;
+      } else {
+        const bank = model.word_bank || [];
+        if(bank.length===0){ alert("لازم تضيف بنك كلمات للنموذج أولاً"); return; }
+        const chipsWrap = dynamicArea._chipsWrap;
+        const selectedChip = chipsWrap.querySelector(".chip-pick.selected");
+        const idx = Array.from(chipsWrap.children).indexOf(selectedChip);
+        payload.options = null;
+        payload.correct_index = idx >= 0 ? idx : 0;
+      }
+      try{
+        if(existing){ await supabase.from("questions").update(payload).eq("id", existing.id); }
+        else{
+          payload.model_id = model.id; payload.sort_order = model.questions.length+1;
+          await supabase.from("questions").insert(payload);
+        }
+        await reloadTree(); renderAdminContent(); buildHome();
+      }catch(e){ alert("حصل خطأ: " + (e.message||e)); }
+    });
+    actions.appendChild(saveBtn);
+    const cancelBtn = el("button","btn btn-ghost btn-sm","إلغاء");
+    cancelBtn.addEventListener("click", ()=>{ renderAdminContent(); });
+    actions.appendChild(cancelBtn);
+    wrap.appendChild(actions);
+    return wrap;
+  }
+
+  /* ---------- Scores tab ---------- */
+  async function renderAdminScores(){
+    adminScoresPane.innerHTML = "⏳ جاري تحميل السجل...";
+    try{
+      const {data, error} = await supabase.from("attempts").select("*").order("created_at", {ascending:false});
+      if(error) throw error;
+      adminScoresPane.innerHTML = "";
+
+      const stats = el("div","stat-row");
+      stats.appendChild(el("span","stat-pill", "📊 عدد المحاولات: " + data.length));
+      const uniqueStudents = new Set(data.map(a=>a.student_name)).size;
+      stats.appendChild(el("span","stat-pill", "👤 عدد الطلاب: " + uniqueStudents));
+      adminScoresPane.appendChild(stats);
+
+      const search = document.createElement("input");
+      search.type = "text"; search.className = "search-box";
+      search.placeholder = "🔍 دوّر باسم الطالب...";
+      adminScoresPane.appendChild(search);
+
+      const tableWrap = el("div");
+      adminScoresPane.appendChild(tableWrap);
+
+      function renderTable(filterText){
+        const filtered = filterText ? data.filter(a=> a.student_name.includes(filterText)) : data;
+        if(filtered.length === 0){ tableWrap.innerHTML = "<p class='hint'>لا توجد نتائج بعد.</p>"; return; }
+        const table = document.createElement("table");
+        table.className = "admin-table";
+        table.innerHTML = "<thead><tr><th>الطالب</th><th>المادة</th><th>الصف</th><th>الوحدة</th><th>النموذج</th><th>الدرجة</th><th>النسبة</th><th>التاريخ</th></tr></thead>";
+        const tbody = document.createElement("tbody");
+        filtered.forEach(a=>{
+          const tr = document.createElement("tr");
+          const dt = new Date(a.created_at);
+          const dateStr = dt.toLocaleDateString("ar-EG") + " " + dt.toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"});
+          tr.innerHTML = `<td>${escapeHtml(a.student_name)}</td><td>${escapeHtml(a.subject_name||"")}</td><td>${escapeHtml(a.grade_name||"")}</td><td>${escapeHtml(a.unit_name||"")}</td><td>${escapeHtml(a.model_label||"")}</td><td>${a.score}/${a.total}</td><td>${a.percentage}%</td><td>${dateStr}</td>`;
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        tableWrap.innerHTML = "";
+        tableWrap.appendChild(table);
+      }
+      renderTable("");
+      search.addEventListener("input", ()=> renderTable(search.value.trim()));
+    }catch(e){
+      adminScoresPane.innerHTML = "<p class='hint'>تعذر تحميل السجل: " + (e.message||e) + "</p>";
+    }
+  }
+
+  /* =========================================================
+     11) INIT
+     ========================================================= */
+  boot();
+
+})();
+</script>
+</body>
+</html>
